@@ -6,6 +6,9 @@ knitr::opts_chunk$set(
 )
 
 ## ----eval=FALSE----------------------------------------------------------
+#  install.packages('socialmixr')
+
+## ----eval=FALSE----------------------------------------------------------
 #  devtools::install_github('sbfnk/socialmixr')
 
 ## ----eval=FALSE----------------------------------------------------------
