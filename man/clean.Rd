@@ -5,20 +5,12 @@
 \alias{clean.survey}
 \title{Clean contact survey data}
 \usage{
-\method{clean}{survey}(x, sample.contact.age = TRUE,
-  contact.age.column = "cnt_age", country.column = "country",
-  quiet = FALSE, ...)
+\method{clean}{survey}(x, country.column = "country", ...)
 }
 \arguments{
 \item{x}{A \code{\link{survey}} object}
 
-\item{sample.contact.age}{whether the contact age should be sampled if it does not exist in the data}
-
-\item{contact.age.column}{the name of the contact age column; if this does not exist, the function will try to construct it from "..._exact", "..._est_min" and "..._est_max" (unless \code{sample.contact.age} is set to FALSE)}
-
 \item{country.column}{the name of the country denoting the country in which the survey participant was interviewed}
-
-\item{quiet}{if TRUE,  will suppress output}
 
 \item{...}{ignored}
 }
@@ -32,5 +24,5 @@ Cleans survey data to work with the 'contact_matrix' function
 }
 \examples{
 data(polymod)
-cleaneed <- clean(polymod) # not really necessary as the 'polymod' data set has already been cleaned
+cleaned <- clean(polymod) # not really necessary as the 'polymod' data set has already been cleaned
 }

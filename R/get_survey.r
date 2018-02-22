@@ -3,24 +3,28 @@
 ##' @description Downloads survey data, or extracts them from files, and returns a clean data set.
 ##' @param survey a DOI (see \code{\link{list_surveys}}), or a numerical id (corresponding to the numbers returned in the \code{id} column returned by \code{\link{list_surveys}}), or a character vector of file names, or a \code{\link{survey}} object (in which case only cleaning is done).
 ##' @param quiet if TRUE, suppress messages
+##' @param ... options for \code{\link{clean}}, which is called at the end of this
 ##' @importFrom httr GET add_headers content
 ##' @importFrom jsonlite fromJSON
 ##' @importFrom curl curl_download
 ##' @importFrom utils as.person read.csv
 ##' @importFrom stringr str_extract_all
+##' @importFrom XML xpathSApply htmlParse xmlValue
 ##' @importFrom countrycode countrycode
 ##' @examples
 ##' list_surveys()
 ##' peru_survey <- get_survey(1)
 ##' @return a survey in the correct format
 ##' @export
-get_survey <- function(survey, quiet=FALSE)
+get_survey <- function(survey, quiet=FALSE, ...)
 {
     ## circumvent R CMD CHECK errors by defining global variables
     id <- NULL
     literal <- NULL
     given <- NULL
     family <- NULL
+    fileFormat <- NULL
+    contentUrl <- NULL
 
     if ("survey" %in% class(survey))
     {
@@ -47,38 +51,33 @@ get_survey <- function(survey, quiet=FALSE)
             doi_url <- paste0("http://dx.doi.org/", survey)
             temp_body <- GET(doi_url, config = list(followlocation = TRUE))
             if (temp_body$status_code == 404) stop("DOI '", survey, "' not found")
-            temp_cite <- GET(doi_url, config = list(followlocation = TRUE),
-                             add_headers(Accept = "application/vnd.citationstyles.csl+json"))
 
             parsed_body <- content(temp_body, as = "text", encoding = "UTF-8")
-            parsed_cite <- fromJSON(content(temp_cite, as = "text", encoding = "UTF-8"))
+            parsed_cite <-
+                fromJSON(xmlValue(xpathSApply(htmlParse(temp_body),
+                                              '//script[@type="application/ld+json"]')[[1]]))
 
-            authors.table <- data.table(parsed_cite$author)
-            if (!("literal" %in% colnames(authors.table))) authors.table[, literal := NA_character_]
-            authors.table <- authors.table[is.na(literal), literal := paste(given, family)]
-            authors <- as.person(paste(authors.table$literal, sep=","))
+            authors <- as.person(paste(parsed_cite$creator$name, sep =","))
 
-            reference <- list(title=parsed_cite$title,
+            reference <- list(title=parsed_cite$name,
                               bibtype="Misc",
                               author=authors,
-                              doi=parsed_cite$DOI,
-                              publisher=parsed_cite$publisher,
+                              doi=parsed_cite$identifier,
                               note=paste("Version", parsed_cite$version),
-                              year=parsed_cite$issued$`date-parts`[1,1])
+                              year=as.integer(substr(parsed_cite$datePublished, 1, 4)))
 
-            urls <-
-                unique(unlist(str_extract_all(parsed_body,
-                                              "/record/[0-9]*/files/[0-9A-Za-z_]*.csv")))
+            data <- data.table(parsed_cite$distribution)
 
-            message("Getting ", parsed_cite$title, ".")
+            urls <- data[fileFormat == "csv", contentUrl]
+
+            message("Getting ", parsed_cite$name, ".")
 
             dir <- tempdir()
             files <- vapply(urls, function(x)
             {
                 temp <- paste(dir, basename(x), sep="/")
-                url <- paste0("http://zenodo.org", x)
-                message("Downloading ", url)
-                dl <- curl_download(url, temp)
+                message("Downloading ", x)
+                dl <- curl_download(x, temp)
                 return(temp)
             }, "")
         } else
@@ -152,7 +151,8 @@ get_survey <- function(survey, quiet=FALSE)
             merged_files <- c()
             for (file in merge_files)
             {
-              max_rows <- max(nrow(main_surveys[[type]]), nrow(contact_data[[file]]))
+              do_merge <- TRUE
+              max_rows <- nrow(main_surveys[[type]])
 
               common_id <- intersect(file_id_cols[[file]], colnames(main_surveys[[type]]))
 
@@ -168,30 +168,38 @@ get_survey <- function(survey, quiet=FALSE)
                         paste0("'", common_id, "'", collapse=", "),
                         " column", ifelse(length(common_id) > 1, "s", ""),
                         " when pulling ", basename(file), " into '", type, "' survey.")
-              }
-
-              duplicate_columns <-
-                setdiff(intersect(colnames(main_surveys[[type]]),
-                                  colnames(contact_data[[file]])),
-                        common_id)
-
-              if (length(duplicate_columns) > 0)
+              } else if (nrow(id_overlap) > max_rows)
               {
-                warning("Ignoring duplicate column",
-                        ifelse(nrow(duplicate_columns) > 1, "s", ""),
-                        " when pulling in ",
-                        basename(file), ": ",
-                        paste(paste0("'", duplicate_columns, "'", collapse=""), sep=", "),
-                        ".")
-                for (column in duplicate_columns)
-                {
-                  contact_data[[file]][, paste(column) := NULL]
-                }
+                warning("Skipping ", basename(file), " as it has too many entries to merge ",
+                        "into '", type, "' survey.")
+                do_merge <- FALSE
               }
 
-              main_surveys[[type]] <-
-                merge(main_surveys[[type]], contact_data[[file]],
-                      by=common_id, all.x=TRUE)
+              if (do_merge)
+              {
+                duplicate_columns <-
+                  setdiff(intersect(colnames(main_surveys[[type]]),
+                                    colnames(contact_data[[file]])),
+                          common_id)
+
+                if (length(duplicate_columns) > 0)
+                {
+                  warning("Ignoring duplicate column",
+                          ifelse(nrow(duplicate_columns) > 1, "s", ""),
+                          " when pulling in ",
+                          basename(file), ": ",
+                          paste(paste0("'", duplicate_columns, "'", collapse=""), sep=", "),
+                          ".")
+                  for (column in duplicate_columns)
+                  {
+                    contact_data[[file]][, paste(column) := NULL]
+                  }
+                }
+
+                main_surveys[[type]] <-
+                  merge(main_surveys[[type]], contact_data[[file]],
+                        by=common_id, all.x=TRUE)
+              }
               merged_files <- c(merged_files, file)
             }
             files <- setdiff(files, merged_files)
@@ -208,7 +216,7 @@ get_survey <- function(survey, quiet=FALSE)
                              reference=reference)
     }
 
-    new_survey <- clean(new_survey)
+    new_survey <- clean(new_survey, ...)
 
     if (!quiet && !is.null(new_survey$reference))
     {

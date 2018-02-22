@@ -54,8 +54,9 @@ survey_countries <- function(survey, country.column = "country", ...)
 ##' @import wpp2015
 ##' @importFrom data.table data.table setkey
 ##' @importFrom utils data
+##' @importFrom countrycode countrycode
 ##' @examples
-##' wpp_countries()
+##' \dontrun{wpp_countries()}
 ##' @export
 wpp_countries <- function()
 {
@@ -67,6 +68,12 @@ wpp_countries <- function()
     data(popM, package = "wpp2015", envir = environment())
     pop <- data.table(rbind(popF, popM))
     setkeyv(pop, "country")
-    return(as.character(unique(pop$country))
-)}
+    countries <- as.character(unique(pop$country))
+    found_countries <-
+        suppressWarnings(countrycode::countrycode(countries,
+                                                  "country.name",
+                                                  "country.name"))
+    found_countries <- found_countries[!is.na(found_countries)]
+    return(found_countries)
+}
 
