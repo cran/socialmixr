@@ -8,6 +8,7 @@
 ##' @param pop.age.column column in the 'pop' data frame indicating the lower age group limit
 ##' @param pop.column column in the 'pop' data frame indicating the population size
 ##' @param ... ignored
+##' @export
 pop_age <- function(pop, age.limits, pop.age.column = "lower.age.limit", pop.column = "population", ...)
 {
     if(getRversion() >= "2.15.1")
@@ -53,6 +54,7 @@ pop_age <- function(pop, age.limits, pop.age.column = "lower.age.limit", pop.col
             pop <- pop[, c(pop.age.column, pop.column), with=FALSE]
         }
 
+        pop <- pop[get(pop.age.column) >=  min(age.limits)]
         pop <- pop[, paste(pop.age.column) := reduce_agegroups(get(pop.age.column), age.limits)]
         pop <- pop[, list(..population = sum(get(pop.column))), by = pop.age.column]
         setnames(pop, "..population", pop.column)

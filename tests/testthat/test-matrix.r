@@ -7,22 +7,26 @@ participants_reduced$participants$added_weight <- 0.5
 participants_reduced$participants$country <- NULL
 
 options <-
-  list(test1 = list(survey = polymod, countries = "United Kingdom", counts = TRUE, weigh.dayofweek = TRUE, missing.contact.age = "sample"),
+  list(test1 = list(survey = polymod, countries = "United Kingdom", counts = TRUE, weigh.dayofweek = TRUE, missing.contact.age = "sample", symmetric = TRUE),
        test2 = list(n = 2, survey = participants_reduced, age.limits = c(0, 1), weights = "added_weight", symmetric = TRUE, weigh.dayofweek = TRUE),
-       test3 = list(survey = polymod, survey.pop="Australia", split=TRUE, filter = c(cnt_home = 1), age.limits=c(0, 5, 10), missing.contact.age = "remove", estimated.contact.age = "sample"))
+       test3 = list(survey = polymod, survey.pop="Australia", countries = "GB", split=TRUE, filter = c(cnt_home = 1), age.limits=c(0, 5, 10), missing.contact.age = "remove", estimated.contact.age = "sample"))
 
 contacts <- lapply(options, function(x) {do.call(contact_matrix, x)})
 
 test_that("contact matrix exists and is square",
 {
-  expect_true(all(sapply(contacts, function(x) {length(unique(dim(x[["matrix"]]))) == 1})))
-  expect_true(all(sapply(contacts, function(x) {prod(dim(x[["matrix"]])) > 0})))
+  expect_true(all(sapply(contacts[c(1, 3)], function(x) {length(unique(dim(x[["matrix"]]))) == 1})))
+  expect_true(all(sapply(contacts[c(2)], function(x) {length(unique(dim(x[["matrices"]][[1]][["matrix"]]))) == 1})))
+  expect_true(all(sapply(contacts[c(1, 3)], function(x) {prod(dim(x[["matrix"]])) > 0})))
+  expect_true(all(sapply(contacts[c(2)], function(x) {prod(dim(x[["matrices"]][[1]][["matrix"]])) > 0})))
 })
 
 test_that("contact matrix is numeric",
 {
-  expect_true(all(sapply(contacts, function(x) {is.numeric(x[["matrix"]])})))
-  expect_false(any(is.na(sapply(contacts, function(x) {is.numeric(x[["matrix"]])}))))
+  expect_true(all(sapply(contacts[c(1, 3)], function(x) {is.numeric(x[["matrix"]])})))
+  expect_true(all(sapply(contacts[c(2)], function(x) {is.numeric(x[["matrices"]][[1]][["matrix"]])})))
+  expect_false(any(is.na(sapply(contacts[c(1, 3)], function(x) {is.numeric(x[["matrix"]])}))))
+  expect_false(any(is.na(sapply(contacts[c(2)], function(x) {is.numeric(x[["matrices"]][[1]][["matrix"]])}))))
   expect_true(is.numeric(contacts[[3]]$contacts))
   expect_true(is.numeric(contacts[[3]]$normalisation))
 })
@@ -73,3 +77,14 @@ test_that("warning is thrown if missing data exist",
   expect_warning(contact_matrix(survey=polymod, missing.contact.age = "keep", symmetric = TRUE), "missing.contact.age")
   expect_warning(contact_matrix(survey=polymod, split = TRUE), "age limits")
 })
+
+test_that("error is thrown if an unknown argument is passed",
+{
+    expect_error(contact_matrix(dummy="test"), "Unknown argument")
+})
+
+test_that("error is thrown if invalid age limits are passed",
+{
+    expect_error(contact_matrix(survey=polymod, age.limits = c(13,11)), "increasing")
+})
+
