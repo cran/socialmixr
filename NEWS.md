@@ -1,3 +1,10 @@
+# socialmixr 0.1.4
+
+* better work with missing and diverse data (e.g., age as factors)
+* 'get_survey' now works with URLs
+* fixed 'list_surveys' to only return the latest version of each data set
+* some small fixes
+
 # socialmixr 0.1.3
 
 * improved handling of DOIs

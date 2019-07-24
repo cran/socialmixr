@@ -55,15 +55,13 @@ wpp_age <- function(countries, years)
             } else {
                 available.years <- unique(pop$year)
                 nearest.year <- available.years[which.min(abs(available.years - years))]
-                warning("Don't have population data available for ", years, ". Will return nearest year (", ").")
+                warning("Don't have population data available for ", years, ". Will return nearest year (", nearest.year, ").")
                 pop <- pop[year %in% nearest.year]
             }
         }
 
         pop <- pop[, lower.age.limit := as.integer(sub("[-+].*$", "", age))]
         pop <- pop[, list(country, lower.age.limit, year, population = (female + male) * 1000)]
-        ## convert to standardised country name
-        pop <- pop[, country := countrycode(country, "country.name", "country.name")]
     }
 
     return(as.data.frame(pop))

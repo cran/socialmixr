@@ -5,10 +5,10 @@
 \alias{check.survey}
 \title{Check contact survey data}
 \usage{
-\method{check}{survey}(x, columns = FALSE, quiet = FALSE, error = FALSE,
-  id.column = "part_id", participant.age.column = "part_age",
-  country.column = "country", year.column = "year",
-  contact.age.column = "cnt_age", ...)
+\method{check}{survey}(x, columns = FALSE, quiet = FALSE,
+  error = FALSE, id.column = "part_id",
+  participant.age.column = "part_age", country.column = "country",
+  year.column = "year", contact.age.column = "cnt_age", ...)
 }
 \arguments{
 \item{x}{A \code{\link{survey}} object}
@@ -35,7 +35,7 @@
 invisibly returns a character vector of the relevant columns
 }
 \description{
-Checks that a survey fulfils all the requirements to work with the 'contact_matrix' function
+Checks that a survey fulfills all the requirements to work with the 'contact_matrix' function
 }
 \examples{
 data(polymod)

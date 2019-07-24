@@ -30,11 +30,11 @@ contact_matrix(polymod, countries = "United Kingdom", age.limits = c(0, 1, 5, 15
 list_surveys()
 
 ## ----eval=FALSE----------------------------------------------------------
-#  peru <- get_survey(1)
-#  saveRDS(peru, "peru.rds")
+#  peru_survey <- get_survey("https://doi.org/10.5281/zenodo.1095664")
+#  saveRDS(peru_survey, "peru.rds")
 
 ## ----eval=FALSE----------------------------------------------------------
-#  peru <- readRDS("peru.rds")
+#  peru_survey <- readRDS("peru.rds")
 
 ## ------------------------------------------------------------------------
 survey_countries(polymod)

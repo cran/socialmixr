@@ -4,7 +4,7 @@ check <- function(x, ...) UseMethod("check")
 ##' @rdname check
 ##' @title Check contact survey data
 ##'
-##' @description Checks that a survey fulfils all the requirements to work with the 'contact_matrix' function
+##' @description Checks that a survey fulfills all the requirements to work with the 'contact_matrix' function
 ##'
 ##' @param x A \code{\link{survey}} object
 ##' @param columns if given, a named character vector containing the name of the "id", "participant.age" and "contact.age" columns
@@ -27,7 +27,7 @@ check.survey <- function(x, columns=FALSE, quiet=FALSE, error=FALSE, id.column="
     if (!is.data.frame(x$participants) || !is.data.frame(x$contacts))
         stop("The 'participants' and 'contacts' elements of 'x' must be data.frames")
 
-    x <- clean(x, sample.contact.age = TRUE)
+    x <- clean(x)
 
     success <- TRUE
     if (!missing(columns)) {
