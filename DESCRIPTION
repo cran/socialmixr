@@ -1,6 +1,6 @@
 Package: socialmixr
-Version: 0.1.4
-Date: 2019-07-23
+Version: 0.1.5
+Date: 2019-09-24
 Title: Social Mixing Matrices for Infectious Disease Modelling
 Authors@R: person("Sebastian", "Funk", email = "sebastian.funk@lshtm.ac.uk", role = c("aut", "cre"))
 Depends: R (>= 3.5.0)
@@ -16,6 +16,6 @@ VignetteBuilder: knitr
 NeedsCompilation: no
 Author: Sebastian Funk [aut, cre]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
-Packaged: 2019-07-23 23:09:19 UTC; seb
+Packaged: 2019-09-24 12:08:54 UTC; seb
 Repository: CRAN
-Date/Publication: 2019-07-24 05:10:02 UTC
+Date/Publication: 2019-09-24 12:40:02 UTC
