@@ -1,1 +1,0 @@
-- Error if wpp_age is called for a country not in the database (e.g., Nauru). Perhaps include a wpp_countries function.

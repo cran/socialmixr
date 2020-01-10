@@ -2,12 +2,16 @@ context("Getting list of surveys")
 
 test_that("list of surveys is not empty",
 {
+  skip_if_no_zenodo()
+  skip_on_cran()
   expect_true(nrow(list_surveys()) > 0)
 })
 
 test_that("surveys can be downloaded",
 {
-  expect_true(class(suppressWarnings(get_survey("10.5281/zenodo.1059920"))) == "survey")
+  skip_if_no_zenodo()
+  skip_on_cran()
+  expect_true(class(suppressMessages(suppressWarnings(get_survey("10.5281/zenodo.1059920")))) == "survey")
 })
 
 test_that("surveys can be cited",

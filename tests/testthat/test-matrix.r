@@ -1,15 +1,37 @@
 context("Generating contact matrices")
 
-participants_reduced <- survey(polymod$participants, polymod$contacts, polymod$reference)
-participants_reduced$participants$year <- NULL
-participants_reduced$participants$dayofweek <- NULL
-participants_reduced$participants$added_weight <- 0.5
-participants_reduced$participants$country <- NULL
+polymod2 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod3 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod4 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod5 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod6 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod7 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod8 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+
+polymod2$participants$added_weight <- 0.5
+polymod2$contacts$cnt_age <- factor(polymod2$contacts$cnt_age)
+polymod3$participants$dayofweek <- NULL
+polymod3$participants$year <- NULL
+polymod4$participants$country <- NULL
+polymod5$participants$country <- factor("Zamonia")
+polymod6$contacts$cnt_age_est_min <- NULL
+polymod6$contacts$cnt_age_est_max <- NULL
+polymod6$contacts$cnt_age_exact <- NULL
+polymod7$participants$country <- NULL
+polymod8$contacts$cnt_age_exact <- NA_real_
+polymod8$contacts$cnt_age_est_min <- NA_real_
+polymod8$contacts$cnt_age_est_max <- NA_real_
+polymod8$contacts$cnt_age <- NA_real_
+polymod8$contacts[polymod$contacts$part_id==10, "cnt_age"] <- 10
+polymod8$contacts[polymod$contacts$part_id==20, "cnt_age"] <- 20
+
+empty_pop <- data.frame(lower.age.limit=c(0, 5), population = NA_real_)
 
 options <-
-  list(test1 = list(survey = polymod, countries = "United Kingdom", counts = TRUE, weigh.dayofweek = TRUE, missing.contact.age = "sample", age.limits=seq(0, 80, by=5)),
-       test2 = list(n = 2, survey = polymod, age.limits = c(0, 5), weights = "added_weight", symmetric = TRUE),
-       test3 = list(survey = polymod, survey.pop="Australia", countries = "GB", split=TRUE, filter = c(cnt_home = 1), age.limits=c(0, 5, 10), missing.contact.age = "remove", estimated.contact.age = "sample"))
+  list(test1 = list(survey = polymod, countries = "United Kingdom", counts = TRUE, weigh.dayofweek = TRUE, age.limits=seq(0, 80, by=5), missing.contact.age="remove"),
+       test2 = list(n = 2, survey = polymod2, age.limits = c(0, 5), weights = "added_weight", symmetric = TRUE),
+       test3 = list(survey = polymod, survey.pop="Australia", countries = "GB", split=TRUE, filter = c(cnt_home = 1), age.limits=c(0, 5, 10), estimated.contact.age = "sample", symmetric=TRUE, missing.contact.age="remove"),
+       test4 = list(survey = polymod8, missing.contact.age="sample", symmetric=TRUE, age.limits=c(0, 5, 15)))
 
 suppressMessages(contacts <- lapply(options, function(x) {do.call(contact_matrix, x)}))
 
@@ -85,5 +107,64 @@ test_that("error is thrown if an unknown argument is passed",
 test_that("error is thrown if invalid age limits are passed",
 {
     expect_error(contact_matrix(survey=polymod, age.limits = c(13,11)), "increasing")
+})
+
+test_that("error is thrown if there are no participants after selection the country",
+{
+  expect_error(contact_matrix(survey=polymod, countries="Romania"), "No participants left")
+})
+
+test_that("warning is thrown if population needed but no 'year' column present",
+{
+  expect_warning(contact_matrix(survey=polymod3, symmetric=TRUE), "No 'year' column")
+})
+
+test_that("warning is thrown if day of week is asked to be weighed but not present",
+{
+  expect_warning(contact_matrix(survey=polymod3, weigh.dayofweek=TRUE), "no 'dayofweek' column")
+})
+
+test_that("warning is thrown if country has no survey population",
+{
+  expect_error(contact_matrix(survey=polymod5, symmetric = TRUE), "not find population data")
+})
+
+test_that("warning is thrown if contact survey has no age information",
+{
+  expect_warning(check(x=polymod6, columns = TRUE, quiet=TRUE), "do not exist")
+})
+
+test_that("warning is thrown if participant data has no country",
+{
+  expect_warning(check(x=polymod4, columns = TRUE, quiet=TRUE), "does not exist")
+})
+
+test_that("user is informed about removing missing data",
+{
+  expect_message(contact_matrix(survey=polymod), "Removing")
+})
+
+test_that("check result is reported back",
+{
+  expect_message(check(x=polymod6), "Check")
+})
+
+test_that("good suggestions are made",
+{
+  expect_warning(contact_matrix(survey=polymod8, symmetric=TRUE, age.limits=c(0, 5, 15)), "adjusting the age limits")
+  expect_warning(contact_matrix(survey=polymod, symmetric=TRUE, age.limits=c(0, 5, 15), missing.participant.age="keep"), "setting 'missing.participant.age")
+  expect_warning(contact_matrix(survey=polymod, symmetric=TRUE, age.limits=c(0, 5, 15), missing.participant.age="keep", missing.contact.age = "keep"), "and 'missing.contact.age")
+})
+
+test_that("nonsensical operations are warned about", 
+{
+  expect_warning(contact_matrix(survey=polymod, counts=TRUE, split=TRUE, age.limits=c(0, 5)), "'split=TRUE' does not make sense with 'counts=TRUE'")
+  expect_warning(contact_matrix(survey=polymod, counts=TRUE, symmetric=TRUE, age.limits=c(0, 5)), "'symmetric=TRUE' does not make sense with 'counts=TRUE'")
+  expect_warning(contact_matrix(survey=polymod, split=TRUE, age.limits=c(0, 5, 15), missing.participant.age="keep"), "does not work with missing data")
+})
+
+test_that("warning is thrown if it is assumed that the survey is representative",
+{
+  expect_warning(contact_matrix(survey=polymod4, symmetric=TRUE), "Assuming the survey is representative")
 })
 
