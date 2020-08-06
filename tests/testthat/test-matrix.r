@@ -7,9 +7,12 @@ polymod5 <- survey(polymod$participants, polymod$contacts, polymod$reference)
 polymod6 <- survey(polymod$participants, polymod$contacts, polymod$reference)
 polymod7 <- survey(polymod$participants, polymod$contacts, polymod$reference)
 polymod8 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod9 <- survey(polymod$participants, polymod$contacts, polymod$reference)
+polymod10 <- survey(polymod$participants, polymod$contacts, polymod$reference)
 
 polymod2$participants$added_weight <- 0.5
 polymod2$contacts$cnt_age <- factor(polymod2$contacts$cnt_age)
+polymod2$participants$part_age[1] <- "3-5"
 polymod3$participants$dayofweek <- NULL
 polymod3$participants$year <- NULL
 polymod4$participants$country <- NULL
@@ -24,7 +27,17 @@ polymod8$contacts$cnt_age_est_max <- NA_real_
 polymod8$contacts$cnt_age <- NA_real_
 polymod8$contacts[polymod$contacts$part_id==10, "cnt_age"] <- 10
 polymod8$contacts[polymod$contacts$part_id==20, "cnt_age"] <- 20
-
+polymod9$participants$part_age_est_min <- 1
+polymod9$participants$part_age_est_max <- 15
+polymod9$participants$part_age <- NULL
+polymod9$participants$part_age_est_min <- 1
+polymod9$participants$part_age_est_max <- 15
+nn <- nrow(polymod9$participants)
+polymod9$participants$part_age <- ifelse(runif(nn) > 0.7, 20, NA)
+polymod10$participants$added_weight <- 
+  ifelse(polymod10$participants$dayofweek %in% 1:5, 5, 2)
+polymod10$participants$added_weight2 <- .3
+                                           
 empty_pop <- data.frame(lower.age.limit=c(0, 5), population = NA_real_)
 
 options <-
@@ -168,3 +181,43 @@ test_that("warning is thrown if it is assumed that the survey is representative"
   expect_warning(contact_matrix(survey=polymod4, symmetric=TRUE), "Assuming the survey is representative")
 })
 
+
+test_that("Taking mean of estimated contact's age give na when mean is not in an age limit ",
+{
+  cm <- contact_matrix(survey=polymod9, age.limits=c(0, 5, 10, 15, 20))
+  expect_true(is.na(rowSums(cm$matrix)[1]))
+  expect_false(is.na(rowSums(cm$matrix)[2]))
+  expect_true(is.na(rowSums(cm$matrix)[3]))
+  expect_true(is.na(rowSums(cm$matrix)[4]))
+  expect_false(is.na(rowSums(cm$matrix)[5]))
+  
+})
+test_that("Taking sample of estimated participant's give na when no overlap with the age limits ",
+{
+  cm <- contact_matrix(survey=polymod9, age.limits=c(0, 5, 10, 15, 20), estimated.participant.age = "sample")
+  expect_false(is.na(rowSums(cm$matrix)[1]))
+  expect_false(is.na(rowSums(cm$matrix)[2]))
+  expect_false(is.na(rowSums(cm$matrix)[3]))
+  expect_true(is.na(rowSums(cm$matrix)[4]))
+  expect_false(is.na(rowSums(cm$matrix)[5]))
+  
+})
+test_that("If weights = weigh.dayofweek, the results are identical",
+          {
+  expect_identical(suppressMessages(
+    contact_matrix(survey = polymod10,countries="United Kingdom",
+                   weigh.dayofweek = TRUE)), 
+    suppressMessages(
+      contact_matrix(survey = polymod10, countries="United Kingdom", 
+                     weights = "added_weight")))
+          })
+test_that("The order in which weights are applied do not change the results",
+          {
+  expect_identical(suppressMessages(
+    contact_matrix(survey = polymod10,countries="United Kingdom",
+                   weights = c("added_weight2", "added_weight"))),
+    suppressMessages(
+      contact_matrix(survey = polymod10, countries="United Kingdom", 
+                     weights = c("added_weight", "added_weight2"))))
+  
+})
