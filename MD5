@@ -1,6 +1,6 @@
-d0da9dd34d948c6fa348a8638bf0f606 *DESCRIPTION
+62ec2bf0b030ee5079dc2914b648e417 *DESCRIPTION
 05a2ee5a2ea530417d59422752072184 *NAMESPACE
-d27cb07fc969ea6dbab02770b89a85d4 *NEWS.md
+b4d153319f4f2f9e20662f2609f0d24a *NEWS.md
 4923906a9691be2413d52299b0e2ab95 *R/check.r
 5d48c0c841a8b140f39053f342427fd0 *R/cite.r
 3c2ccbdbf776d09645651853cc6fabaf *R/clean.r
@@ -11,15 +11,15 @@ a46e7a81ac1e4adecd1547da313f0b49 *R/internet.r
 bdb6c04caabac3eefdcaf04a72e2c9bb *R/limits_to_agegroups.r
 619b44bf9216bb6a8e2674a829c07203 *R/lists.r
 bc536e5b4eb285afe4c489d95e1ee59f *R/pop_age.r
-77a5f80ff75730be3cea3363aa29d6ab *R/reduce_agegroups.r
+cb763e41f19d348d2e6f06c829ba08fc *R/reduce_agegroups.r
 a8814299ba577ff49ec4d2d4f6735ac8 *R/survey.r
 8fb6729034cd48af16e9da4bf9f589b0 *R/wpp_age.r
 03c18c213298d00097858a5212776505 *README.md
-d10be22475dda6ac8dc85bac438d494d *build/vignette.rds
+c798ab8aa8ad08552b81de1f38755302 *build/vignette.rds
 45dcba01dfd195e185ba959466845bef *data/polymod.rda
 1cd8762d8286b44899ad190a7ad4b2e3 *inst/doc/introduction.R
 409e89f16e1069258a9bb7edd6974480 *inst/doc/introduction.Rmd
-da3f11920597bcbe278c09ee5756346f *inst/doc/introduction.html
+e7bca64af817e529116eb5a79ec56262 *inst/doc/introduction.html
 a1a62cced5a4c955b97998a9b095f024 *man/check.Rd
 3456f857d2efbe6b1dc3327e8a3638df *man/check_zenodo.Rd
 0b4aaee58785704273c7921d6b68c1dd *man/cite.Rd
@@ -42,6 +42,6 @@ e62bce22c32edef60c3cc55d2f4a4b04 *man/survey.Rd
 311d499241476be1cfd4c3bcf30a2e47 *tests/testthat/test-agegroups.r
 5eae1b506d422debac3381346a64c913 *tests/testthat/test-checks.r
 4cec0cd6eda2da8ed8f6a561ca05a669 *tests/testthat/test-countries.r
-9b84cc3bda869a279c78fdb3ef407284 *tests/testthat/test-matrix.r
+c866a11be1fd3ba4066518c25faaa0dd *tests/testthat/test-matrix.r
 c778ee38ba94690f13818a05152b5537 *tests/testthat/test-surveys.r
 409e89f16e1069258a9bb7edd6974480 *vignettes/introduction.Rmd

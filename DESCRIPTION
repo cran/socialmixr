@@ -1,6 +1,6 @@
 Package: socialmixr
-Version: 0.1.7
-Date: 2020-08-06
+Version: 0.1.8
+Date: 2020-11-12
 Title: Social Mixing Matrices for Infectious Disease Modelling
 Authors@R: 
   c(
@@ -18,11 +18,11 @@ Description: Provides methods for sampling contact matrices from diary data for 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: testthat, knitr, rmarkdown, ggplot2, reshape2, formatR
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-08-06 11:16:25 UTC; eidesfun
+Packaged: 2020-11-13 09:05:41 UTC; eidesfun
 Author: Sebastian Funk [aut, cre],
   Maria Bekker-Nielsen Dunbar [ctb],
   Carl A. B. Pearson [ctb],
@@ -31,4 +31,4 @@ Author: Sebastian Funk [aut, cre],
   Alexis Robert [ctb]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
 Repository: CRAN
-Date/Publication: 2020-08-06 11:30:03 UTC
+Date/Publication: 2020-11-14 13:40:02 UTC

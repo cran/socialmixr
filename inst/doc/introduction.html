@@ -1,449 +1,525 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-<title>Usage</title>
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<script type="text/javascript">
-window.onload = function() {
-  var imgs = document.getElementsByTagName('img'), i, img;
-  for (i = 0; i < imgs.length; i++) {
-    img = imgs[i];
-    // center an image if it is the only element of its parent
-    if (img.parentElement.childElementCount === 1)
-      img.parentElement.style.textAlign = 'center';
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Sebastian Funk" />
+
+<meta name="date" content="2020-11-13" />
+
+<title>Introduction to socialmixr</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
   }
-};
+});
 </script>
 
-<!-- Styles for R syntax highlighter -->
-<style type="text/css">
-   pre .operator,
-   pre .paren {
-     color: rgb(104, 118, 135)
-   }
 
-   pre .literal {
-     color: #990073
-   }
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 
-   pre .number {
-     color: #099;
-   }
-
-   pre .comment {
-     color: #998;
-     font-style: italic
-   }
-
-   pre .keyword {
-     color: #900;
-     font-weight: bold
-   }
-
-   pre .identifier {
-     color: rgb(0, 0, 0);
-   }
-
-   pre .string {
-     color: #d14;
-   }
 </style>
-
-<!-- R syntax highlighter -->
-<script type="text/javascript">
-var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
-hljs.initHighlightingOnLoad();
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
 </script>
 
-<!-- MathJax scripts -->
-<script type="text/javascript" src="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML">
-</script>
 
 
-<style type="text/css">
-body, td {
-   font-family: sans-serif;
-   background-color: white;
-   font-size: 13px;
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
 }
-
-body {
-  max-width: 800px;
-  margin: auto;
-  padding: 1em;
-  line-height: 20px;
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
 }
-
-tt, code, pre {
-   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
 }
-
-h1 {
-   font-size:2.2em;
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
 }
-
-h2 {
-   font-size:1.8em;
+#TOC ul ul {
+margin-left: -2em;
 }
-
-h3 {
-   font-size:1.4em;
+#TOC li {
+line-height: 16px;
 }
-
-h4 {
-   font-size:1.0em;
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
 }
-
-h5 {
-   font-size:0.9em;
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
 }
-
-h6 {
-   font-size:0.8em;
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
 }
-
-a:visited {
-   color: rgb(50%, 0%, 50%);
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
 }
-
-pre, img {
-  max-width: 100%;
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
 }
 pre {
-  overflow-x: auto;
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
 }
-pre code {
-   display: block; padding: 0.5em;
+pre:not([class]) {
+background-color: #f7f7f7;
 }
-
 code {
-  font-size: 92%;
-  border: 1px solid #ccc;
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
 }
-
-code[class] {
-  background-color: #F8F8F8;
+p > code, li > code {
+padding: 2px 0px;
 }
-
-table, td, th {
-  border: none;
+div.figure {
+text-align: center;
 }
-
-blockquote {
-   color:#666666;
-   margin:0;
-   padding-left: 1em;
-   border-left: 0.5em #EEE solid;
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
 }
-
-hr {
-   height: 0px;
-   border-bottom: none;
-   border-top-width: thin;
-   border-top-style: dotted;
-   border-top-color: #999999;
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
 }
-
-@media print {
-   * {
-      background: transparent !important;
-      color: black !important;
-      filter:none !important;
-      -ms-filter: none !important;
-   }
-
-   body {
-      font-size:12pt;
-      max-width:100%;
-   }
-
-   a, a:visited {
-      text-decoration: underline;
-   }
-
-   hr {
-      visibility: hidden;
-      page-break-before: always;
-   }
-
-   pre, blockquote {
-      padding-right: 1em;
-      page-break-inside: avoid;
-   }
-
-   tr, img {
-      page-break-inside: avoid;
-   }
-
-   img {
-      max-width: 100% !important;
-   }
-
-   @page :left {
-      margin: 15mm 20mm 15mm 10mm;
-   }
-
-   @page :right {
-      margin: 15mm 10mm 15mm 20mm;
-   }
-
-   p, h2, h3 {
-      orphans: 3; widows: 3;
-   }
-
-   h2, h3 {
-      page-break-after: avoid;
-   }
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
 }
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
+
 
 
 
 </head>
 
 <body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to socialmixr</h1>
+<h4 class="author">Sebastian Funk</h4>
+<h4 class="date">2020-11-13</h4>
+
+
+
 <p><a href="https://github.com/sbfnk/socialmixr">socialmixr</a> is an <code>R</code> package to derive social mixing matrices from survey data. These are particularly useful for age-structured <a href="https://en.wikipedia.org/wiki/Mathematical_modelling_of_infectious_disease">infectious disease models</a>. For background on age-specific mixing matrices and what data inform them, see, for example, the paper on POLYMOD by <a href="https://doi.org/10.1371/journal.pmed.0050074">Mossong et al</a>.</p>
-
+<div id="usage" class="section level1">
 <h1>Usage</h1>
-
 <p>The latest stable version of the <code>socialmixr</code> package is installed via</p>
-
-<pre><code class="r">install.packages(&#39;socialmixr&#39;)
-</code></pre>
-
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">install.packages</span>(<span class="st">&#39;socialmixr&#39;</span>)</span></code></pre></div>
 <p>The latest development version of the <code>socialmixr</code> package can be installed via</p>
-
-<pre><code class="r">devtools::install_github(&#39;sbfnk/socialmixr&#39;)
-</code></pre>
-
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a>devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&#39;sbfnk/socialmixr&#39;</span>)</span></code></pre></div>
 <p>To load the package, use</p>
-
-<pre><code class="r">library(&#39;socialmixr&#39;)
-</code></pre>
-
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="kw">library</span>(<span class="st">&#39;socialmixr&#39;</span>)</span></code></pre></div>
 <pre><code>#&gt; 
 #&gt; Attaching package: &#39;socialmixr&#39;
 #&gt; The following object is masked from &#39;package:utils&#39;:
 #&gt; 
-#&gt;     cite
-</code></pre>
-
+#&gt;     cite</code></pre>
 <p>At the heart of the <code>socialmixr</code> package is the <code>contact_matrix</code> function. This extracts a contact matrix from survey data. You can use the <code>R</code> help to find out about usage of the <code>contact_matrix</code> function, including a list of examples:</p>
-
-<pre><code class="r">?contact_matrix
-</code></pre>
-
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a>?contact_matrix</span></code></pre></div>
 <p>The POLYMOD data are included with the package and can be loaded using</p>
-
-<pre><code class="r">data(polymod)
-</code></pre>
-
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="kw">data</span>(polymod)</span></code></pre></div>
 <p>An example use would be</p>
-
-<pre><code class="r">contact_matrix(polymod, countries = &quot;United Kingdom&quot;, age.limits = c(0, 1, 5, 15))
-#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function
-#&gt; Removing participants that have contacts without age information. To change this behaviour, set the &#39;missing.contact.age&#39; option
-#&gt; $matrix
-#&gt;          contact.age.group
-#&gt; age.group      [0,1)     [1,5)   [5,15)      15+
-#&gt;    [0,1)  0.40000000 0.8000000 1.266667 5.933333
-#&gt;    [1,5)  0.11250000 1.9375000 1.462500 5.450000
-#&gt;    [5,15) 0.02450980 0.5049020 7.946078 6.215686
-#&gt;    15+    0.03230337 0.3581461 1.290730 9.594101
-#&gt; 
-#&gt; $participants
-#&gt;    age.group participants proportion
-#&gt; 1:     [0,1)           15 0.01483680
-#&gt; 2:     [1,5)           80 0.07912957
-#&gt; 3:    [5,15)          204 0.20178042
-#&gt; 4:       15+          712 0.70425321
-</code></pre>
-
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="kw">contact_matrix</span>(polymod, <span class="dt">countries =</span> <span class="st">&quot;United Kingdom&quot;</span>, <span class="dt">age.limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">15</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a><span class="co">#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a><span class="co">#&gt; Removing participants that have contacts without age information. To change this behaviour, set the &#39;missing.contact.age&#39; option</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a><span class="co">#&gt; $matrix</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a><span class="co">#&gt;          contact.age.group</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a><span class="co">#&gt; age.group      [0,1)     [1,5)   [5,15)      15+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a><span class="co">#&gt;    [0,1)  0.40000000 0.8000000 1.266667 5.933333</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true"></a><span class="co">#&gt;    [1,5)  0.11250000 1.9375000 1.462500 5.450000</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true"></a><span class="co">#&gt;    [5,15) 0.02450980 0.5049020 7.946078 6.215686</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true"></a><span class="co">#&gt;    15+    0.03230337 0.3581461 1.290730 9.594101</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true"></a><span class="co">#&gt; $participants</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true"></a><span class="co">#&gt;    age.group participants proportion</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true"></a><span class="co">#&gt; 1:     [0,1)           15 0.01483680</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true"></a><span class="co">#&gt; 2:     [1,5)           80 0.07912957</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true"></a><span class="co">#&gt; 3:    [5,15)          204 0.20178042</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true"></a><span class="co">#&gt; 4:       15+          712 0.70425321</span></span></code></pre></div>
 <p>This generates a contact matrix from the UK part of the POLYMOD study, with age groups 0-1, 1-5, 5-15 and 15+ years. It contains the mean number of contacts that each member of an age group (row) has reported with members of the same or another age group (column).</p>
-
+</div>
+<div id="methodology" class="section level1">
 <h1>Methodology</h1>
-
 <p>The <code>contact_matrix</code> function requires a survey given as a list of two elements, both given as data.frames: <code>participants</code> and <code>contacts</code>. They must be linked by an ID column that refers to the identity of the queried participants (by default <code>global_id</code>, but this can be changed using the <code>id.column</code> argument). The <code>participants</code> data frame, as a minimum, must have the ID column and a column denoting participant age (which can be set by the <code>part.age.column</code> argument, by default <code>participant_age</code>). The <code>contacts</code> data frame, similarly, must have the ID column and a column denoting age (which can be set by the <code>contact.age.column</code> argument, by default <code>cnt_age_mean</code>).</p>
-
 <p>The function then either randomly samples participants (if <code>bootstrap</code> is set to <code>TRUE</code>) or takes all participants in the survey and determines the mean number of contacts in each age group given the age group of the participant. The age groups can be set using the <code>age.limits</code> argument, which should be set to the lower limits of the age groups (e.g., <code>age.limits=c(0, 5, 10)</code> for age groups 0-5, 5-10, 10+). If these are not given, the narrowest age groups possible given survey and demographic data are used.</p>
-
+</div>
+<div id="surveys" class="section level1">
 <h1>Surveys</h1>
-
 <p>The key argument to the <code>contact_matrix</code> function is the <code>survey</code> that it supposed to use. The <code>socialmixr</code> package includes the POLYMOD survey, which will be used if not survey is specified. It also provides access to all surveys in the <a href="https://zenodo.org/communities/social_contact_data">Social contact data</a> community on <a href="https://zenodo.org">Zenodo</a>. The available surveys can be listed (if an internet connection is available) with</p>
-
-<pre><code class="r">list_surveys()
-</code></pre>
-
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="kw">list_surveys</span>()</span></code></pre></div>
 <p>A survey can be downloaded using the <code>get_survey</code> command. This will get the relevant data of a survey given its Zenodo DOI (as returned by <code>list_surveys</code>). All other relevant commands in the <code>socialmixr</code> package accept a DOI, but if a survey is to be used repeatedly it is worth downloading it and storing it locally to avoid the need for a network connection and speed up processing.</p>
-
-<pre><code class="r">peru_survey &lt;- get_survey(&quot;https://doi.org/10.5281/zenodo.1095664&quot;)
-saveRDS(peru_survey, &quot;peru.rds&quot;)
-</code></pre>
-
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a>peru_survey &lt;-<span class="st"> </span><span class="kw">get_survey</span>(<span class="st">&quot;https://doi.org/10.5281/zenodo.1095664&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a><span class="kw">saveRDS</span>(peru_survey, <span class="st">&quot;peru.rds&quot;</span>)</span></code></pre></div>
 <p>This way, the <code>peru</code> data set can be loaded in the future without the need for an internet connection using</p>
-
-<pre><code class="r">peru_survey &lt;- readRDS(&quot;peru.rds&quot;)
-</code></pre>
-
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a>peru_survey &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;peru.rds&quot;</span>)</span></code></pre></div>
 <p>Some surveys may contain data from multiple countries. To check this, use the <code>survey_countries</code> function</p>
-
-<pre><code class="r">survey_countries(polymod)
-#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function
-#&gt; [1] &quot;Italy&quot;          &quot;Germany&quot;        &quot;Luxembourg&quot;     &quot;Netherlands&quot;   
-#&gt; [5] &quot;Poland&quot;         &quot;United Kingdom&quot; &quot;Finland&quot;        &quot;Belgium&quot;
-</code></pre>
-
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="kw">survey_countries</span>(polymod)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a><span class="co">#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Italy&quot;          &quot;Germany&quot;        &quot;Luxembourg&quot;     &quot;Netherlands&quot;   </span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a><span class="co">#&gt; [5] &quot;Poland&quot;         &quot;United Kingdom&quot; &quot;Finland&quot;        &quot;Belgium&quot;</span></span></code></pre></div>
 <p>If one wishes to get a contact matrix for one or more specific countries, a <code>countries</code> argument can be passed to <code>contact_matrix</code>. If this is not done, the different surveys contained in a dataset are combined as if they were one single sample (i.e., not applying any population-weighting by country or other correction).</p>
-
 <p>By default, socialmixr uses the POLYMOD survey. A reference for any given survey can be obtained using <code>cite</code>, e.g.</p>
-
-<pre><code class="r">cite(polymod)
-#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function
-#&gt; 
-#&gt; To cite POLYMOD social contact data in publications use:
-#&gt; 
-#&gt; Mossong J, Hens N, Jit M, Beutels P, Auranen K, Mikolajczyk R, Massari
-#&gt; M, Salmaso S, Tomba GS, Wallinga J, Heijne J, Sadkowska-Todys M,
-#&gt; Rosinska M, Edmunds WJ (2017). &quot;POLYMOD social contact data.&quot; doi:
-#&gt; 10.5281/zenodo.1157934 (URL: https://doi.org/10.5281/zenodo.1157934),
-#&gt; Version 1.1.
-#&gt; 
-#&gt; A BibTeX entry for LaTeX users is
-#&gt; 
-#&gt;   @Misc{,
-#&gt;     title = {POLYMOD social contact data},
-#&gt;     author = {Joel Mossong and Niel Hens and Mark Jit and Philippe Beutels and Kari Auranen and Rafael Mikolajczyk and Marco Massari and Stefania Salmaso and Gianpaolo Scalia Tomba and Jacco Wallinga and Janneke Heijne and Malgorzata Sadkowska-Todys and Magdalena Rosinska and W. John Edmunds},
-#&gt;     doi = {https://doi.org/10.5281/zenodo.1157934},
-#&gt;     note = {Version 1.1},
-#&gt;     year = {2017},
-#&gt;   }
-</code></pre>
-
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="kw">cite</span>(polymod)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a><span class="co">#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a><span class="co">#&gt; To cite POLYMOD social contact data in publications use:</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true"></a><span class="co">#&gt; Mossong J, Hens N, Jit M, Beutels P, Auranen K, Mikolajczyk R, Massari</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true"></a><span class="co">#&gt; M, Salmaso S, Tomba GS, Wallinga J, Heijne J, Sadkowska-Todys M,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true"></a><span class="co">#&gt; Rosinska M, Edmunds WJ (2017). &quot;POLYMOD social contact data.&quot; doi:</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true"></a><span class="co">#&gt; 10.5281/zenodo.1157934 (URL: https://doi.org/10.5281/zenodo.1157934),</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true"></a><span class="co">#&gt; Version 1.1.</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true"></a><span class="co">#&gt; A BibTeX entry for LaTeX users is</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true"></a><span class="co">#&gt;   @Misc{,</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true"></a><span class="co">#&gt;     title = {POLYMOD social contact data},</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true"></a><span class="co">#&gt;     author = {Joel Mossong and Niel Hens and Mark Jit and Philippe Beutels and Kari Auranen and Rafael Mikolajczyk and Marco Massari and Stefania Salmaso and Gianpaolo Scalia Tomba and Jacco Wallinga and Janneke Heijne and Malgorzata Sadkowska-Todys and Magdalena Rosinska and W. John Edmunds},</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true"></a><span class="co">#&gt;     doi = {https://doi.org/10.5281/zenodo.1157934},</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true"></a><span class="co">#&gt;     note = {Version 1.1},</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true"></a><span class="co">#&gt;     year = {2017},</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true"></a><span class="co">#&gt;   }</span></span></code></pre></div>
+</div>
+<div id="bootstrapping" class="section level1">
 <h1>Bootstrapping</h1>
-
 <p>To get an idea of uncertainty of the contact matrices, a bootstrap can be used. If an argument <code>n</code> greater than 1 is passed to <code>contact_matrix</code>, multiple samples of contact matrices are generated. For each sample, participants are sampled (with replacement, to get the same number of participants of the original study), and contacts are sampled from the set of all the contacts of all the participants (again, with replacement). All resulting contact matrices are returned as <code>matrices</code> field in the returned list. From these, derived quantities can be obtained, for example the mean</p>
-
-<pre><code class="r">m &lt;- contact_matrix(polymod, countries = &quot;United Kingdom&quot;, age.limits = c(0, 1, 5, 15), n=5)
-#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function
-length(m$matrices)
-#&gt; [1] 5
-mr &lt;- Reduce(&quot;+&quot;, lapply(m$matrices, function(x) {x$matrix})) / length(m$matrices)
-mr
-#&gt;          contact.age.group
-#&gt; age.group      [0,1)     [1,5)   [5,15)      15+
-#&gt;    [0,1)  0.32551107 0.7914876 1.080662 6.245282
-#&gt;    [1,5)  0.09224619 1.9512553 1.690793 5.803063
-#&gt;    [5,15) 0.02551886 0.5370457 7.674400 6.267711
-#&gt;    15+    0.03532061 0.3245432 1.241381 9.624978
-</code></pre>
-
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a>m &lt;-<span class="st"> </span><span class="kw">contact_matrix</span>(polymod, <span class="dt">countries =</span> <span class="st">&quot;United Kingdom&quot;</span>, <span class="dt">age.limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">15</span>), <span class="dt">n=</span><span class="dv">5</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a><span class="co">#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a><span class="kw">length</span>(m<span class="op">$</span>matrices)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a><span class="co">#&gt; [1] 5</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true"></a>mr &lt;-<span class="st"> </span><span class="kw">Reduce</span>(<span class="st">&quot;+&quot;</span>, <span class="kw">lapply</span>(m<span class="op">$</span>matrices, <span class="cf">function</span>(x) {x<span class="op">$</span>matrix})) <span class="op">/</span><span class="st"> </span><span class="kw">length</span>(m<span class="op">$</span>matrices)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true"></a>mr</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true"></a><span class="co">#&gt;          contact.age.group</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true"></a><span class="co">#&gt; age.group      [0,1)     [1,5)   [5,15)      15+</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true"></a><span class="co">#&gt;    [0,1)  0.48757958 0.7366087 1.198042 6.252502</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true"></a><span class="co">#&gt;    [1,5)  0.09955107 2.3929449 1.475027 5.465488</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true"></a><span class="co">#&gt;    [5,15) 0.02275334 0.5021818 7.860182 6.159409</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true"></a><span class="co">#&gt;    15+    0.03291598 0.3894526 1.330329 9.516813</span></span></code></pre></div>
+</div>
+<div id="demography" class="section level1">
 <h1>Demography</h1>
-
 <p>Obtaining symmetric contact matrices or splitting out their components (see below) requires information about the underlying demographic composition of the survey population. This can be passed to <code>contact_matrix</code> as the <code>survey.pop</code> argument, a <code>data.frame</code> with two columns, <code>lower.age.limit</code> (denoting the lower end of the age groups) and <code>population</code> (denoting the number of people in each age group). If no <code>survey.pop</code> is not given, <code>contact_matrix</code> will try to obtain the age structure of the population (as per the <code>countries</code> argument) from the <a href="https://esa.un.org/unpd/wpp/">World Population Prospects</a> of the United Nations, using estimates from the year that closest matches the year in which the contact survey was conducted.</p>
-
 <p>If demographic information is used, this is returned by <code>contact_matrix</code> as the <code>demography</code> field in the results list.</p>
-
+</div>
+<div id="symmetric-contact-matrices" class="section level1">
 <h1>Symmetric contact matrices</h1>
-
-<p>Conceivably, contact matrices should be symmetric: the total number of contacts made by members of one age group with those of another should be the same as vice versa. Mathematically, if \(c_{ij}\) is the mean number of contacts made by members of age group \(i\) with members of age group \(j\), and the total number of people in age group \(i\) is \(N_i\), then</p>
-
-<p>\[c_{ij} N_i = c_{ji}N_j\]</p>
-
+<p>Conceivably, contact matrices should be symmetric: the total number of contacts made by members of one age group with those of another should be the same as vice versa. Mathematically, if <span class="math inline">\(c_{ij}\)</span> is the mean number of contacts made by members of age group <span class="math inline">\(i\)</span> with members of age group <span class="math inline">\(j\)</span>, and the total number of people in age group <span class="math inline">\(i\)</span> is <span class="math inline">\(N_i\)</span>, then</p>
+<p><span class="math display">\[c_{ij} N_i = c_{ji}N_j\]</span></p>
 <p>Because of variation in the sample from which the contact matrix is obtained, this relationship is usually not fulfilled exactly. In order to obtain a symmetric contact matrix that fulfills it, one can use</p>
-
-<p>\[c'_{ij} = \frac{1}{2N_i} (c_{ij} N_i + c_{ji} N_j)\]</p>
-
+<p><span class="math display">\[c&#39;_{ij} = \frac{1}{2N_i} (c_{ij} N_i + c_{ji} N_j)\]</span></p>
 <p>To get this version of the contact matrix, use <code>symmetric = TRUE</code> when calling the <code>contact_matrix</code> function.</p>
-
-<pre><code class="r">contact_matrix(polymod, countries = &quot;United Kingdom&quot;, age.limits = c(0, 1, 5, 15), symmetric = TRUE)
-#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function
-#&gt; Removing participants that have contacts without age information. To change this behaviour, set the &#39;missing.contact.age&#39; option
-#&gt; Warning in pop_age(survey.pop, age.limits, ...): Not all age groups represented in population data (5-year age band).
-#&gt;   Linearly estimating age group sizes from the 5-year bands.
-#&gt; $matrix
-#&gt;       contact.age.group
-#&gt;             [0,1)     [1,5)    [5,15)      15+
-#&gt;   [1,] 0.40000000 0.6250000 0.7643524 4.122001
-#&gt;   [2,] 0.15625000 1.9375000 1.4059984 5.927286
-#&gt;   [3,] 0.07149388 0.5260415 7.9460784 7.425725
-#&gt;   [4,] 0.05762596 0.3314560 1.1098739 9.594101
-#&gt; 
-#&gt; $demography
-#&gt;    age.group population proportion year
-#&gt; 1:     [0,1)     690312 0.01146507 2005
-#&gt; 2:     [1,5)    2761248 0.04586028 2005
-#&gt; 3:    [5,15)    7380235 0.12257488 2005
-#&gt; 4:       15+   49378217 0.82009977 2005
-#&gt; 
-#&gt; $participants
-#&gt;    age.group participants proportion
-#&gt; 1:     [0,1)           15 0.01483680
-#&gt; 2:     [1,5)           80 0.07912957
-#&gt; 3:    [5,15)          204 0.20178042
-#&gt; 4:       15+          712 0.70425321
-</code></pre>
-
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a><span class="kw">contact_matrix</span>(polymod, <span class="dt">countries =</span> <span class="st">&quot;United Kingdom&quot;</span>, <span class="dt">age.limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">15</span>), <span class="dt">symmetric =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true"></a><span class="co">#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true"></a><span class="co">#&gt; Removing participants that have contacts without age information. To change this behaviour, set the &#39;missing.contact.age&#39; option</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true"></a><span class="co">#&gt; Warning in pop_age(survey.pop, age.limits, ...): Not all age groups represented in population data (5-year age band).</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true"></a><span class="co">#&gt;   Linearly estimating age group sizes from the 5-year bands.</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true"></a><span class="co">#&gt; $matrix</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true"></a><span class="co">#&gt;       contact.age.group</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true"></a><span class="co">#&gt;             [0,1)     [1,5)    [5,15)      15+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true"></a><span class="co">#&gt;   [1,] 0.40000000 0.6250000 0.7643524 4.122001</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true"></a><span class="co">#&gt;   [2,] 0.15625000 1.9375000 1.4059984 5.927286</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true"></a><span class="co">#&gt;   [3,] 0.07149388 0.5260415 7.9460784 7.425725</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true"></a><span class="co">#&gt;   [4,] 0.05762596 0.3314560 1.1098739 9.594101</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true"></a><span class="co">#&gt; $demography</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true"></a><span class="co">#&gt;    age.group population proportion year</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true"></a><span class="co">#&gt; 1:     [0,1)     690312 0.01146507 2005</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true"></a><span class="co">#&gt; 2:     [1,5)    2761248 0.04586028 2005</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true"></a><span class="co">#&gt; 3:    [5,15)    7380235 0.12257488 2005</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true"></a><span class="co">#&gt; 4:       15+   49378217 0.82009977 2005</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true"></a><span class="co">#&gt; $participants</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true"></a><span class="co">#&gt;    age.group participants proportion</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true"></a><span class="co">#&gt; 1:     [0,1)           15 0.01483680</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true"></a><span class="co">#&gt; 2:     [1,5)           80 0.07912957</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true"></a><span class="co">#&gt; 3:    [5,15)          204 0.20178042</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true"></a><span class="co">#&gt; 4:       15+          712 0.70425321</span></span></code></pre></div>
+</div>
+<div id="splitting-contact-matrices" class="section level1">
 <h1>Splitting contact matrices</h1>
-
-<p>The <code>contact_matrix</code> contains a simple model for the elements of the contact matrix, by which it is split into a <em>global</em> component, as well as three components representing <em>contacts</em>, <em>assortativity</em> and <em>demography</em>. In other words, the elements \(c_{ij}\) of the contact matrix are modelled as</p>
-
-<p>\[ c_{ij} = q d_i a_{ij} n_j \]</p>
-
-<p>where \(q d_i\) is the number of contacts that a member of group \(i\) makes across age groups, \(n_j\) is the proportion of the surveyed population in age group \(j\). The constant \(q\) is set to the value of the largest eigenvalue of \(c_{ij}\); if used in an infectious disease model, it can be replaced by the basic reproduction number \(R_0\).</p>
-
-<p>To model the contact matrix in this way with the <code>contact_matrix</code> function, set <code>split = TRUE</code>. The components of the matrix are returned as elements <code>normalisation</code> (\(q\)), <code>contacts</code> (\(d_i\)), <code>matrix</code> (\(a_{ij}\)) and <code>demography</code> (\(n_j\)) of the resulting list.</p>
-
-<pre><code class="r">contact_matrix(polymod, countries = &quot;United Kingdom&quot;, age.limits = c(0, 1, 5, 15), split = TRUE)
-#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function
-#&gt; Removing participants that have contacts without age information. To change this behaviour, set the &#39;missing.contact.age&#39; option
-#&gt; Warning in pop_age(survey.pop, age.limits, ...): Not all age groups represented in population data (5-year age band).
-#&gt;   Linearly estimating age group sizes from the 5-year bands.
-#&gt; $mean.contacts
-#&gt; [1] 11.55495
-#&gt; 
-#&gt; $normalisation
-#&gt; [1] 1.03915
-#&gt; 
-#&gt; $contacts
-#&gt; [1] 0.6995727 0.7464190 1.2235173 0.9390331
-#&gt; 
-#&gt; $matrix
-#&gt;           [,1]      [,2]      [,3]      [,4]
-#&gt; [1,] 4.1534023 2.0767011 1.2302166 0.8612967
-#&gt; [2,] 1.0948299 4.7138509 1.3312672 0.7414821
-#&gt; [3,] 0.1455146 0.7494002 4.4126024 0.5159003
-#&gt; [4,] 0.2498871 0.6926217 0.9339135 1.0375529
-#&gt; 
-#&gt; $demography
-#&gt;    age.group population proportion year
-#&gt; 1:     [0,1)     690312 0.01146507 2005
-#&gt; 2:     [1,5)    2761248 0.04586028 2005
-#&gt; 3:    [5,15)    7380235 0.12257488 2005
-#&gt; 4:       15+   49378217 0.82009977 2005
-#&gt; 
-#&gt; $participants
-#&gt;    age.group participants proportion
-#&gt; 1:     [0,1)           15 0.01483680
-#&gt; 2:     [1,5)           80 0.07912957
-#&gt; 3:    [5,15)          204 0.20178042
-#&gt; 4:       15+          712 0.70425321
-</code></pre>
-
+<p>The <code>contact_matrix</code> contains a simple model for the elements of the contact matrix, by which it is split into a <em>global</em> component, as well as three components representing <em>contacts</em>, <em>assortativity</em> and <em>demography</em>. In other words, the elements <span class="math inline">\(c_{ij}\)</span> of the contact matrix are modelled as</p>
+<p><span class="math display">\[ c_{ij} = q d_i a_{ij} n_j \]</span></p>
+<p>where <span class="math inline">\(q d_i\)</span> is the number of contacts that a member of group <span class="math inline">\(i\)</span> makes across age groups, <span class="math inline">\(n_j\)</span> is the proportion of the surveyed population in age group <span class="math inline">\(j\)</span>. The constant <span class="math inline">\(q\)</span> is set to the value of the largest eigenvalue of <span class="math inline">\(c_{ij}\)</span>; if used in an infectious disease model, it can be replaced by the basic reproduction number <span class="math inline">\(R_0\)</span>.</p>
+<p>To model the contact matrix in this way with the <code>contact_matrix</code> function, set <code>split = TRUE</code>. The components of the matrix are returned as elements <code>normalisation</code> (<span class="math inline">\(q\)</span>), <code>contacts</code> (<span class="math inline">\(d_i\)</span>), <code>matrix</code> (<span class="math inline">\(a_{ij}\)</span>) and <code>demography</code> (<span class="math inline">\(n_j\)</span>) of the resulting list.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a><span class="kw">contact_matrix</span>(polymod, <span class="dt">countries =</span> <span class="st">&quot;United Kingdom&quot;</span>, <span class="dt">age.limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">15</span>), <span class="dt">split =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true"></a><span class="co">#&gt; Using POLYMOD social contact data. To cite this in a publication, use the &#39;cite&#39; function</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true"></a><span class="co">#&gt; Removing participants that have contacts without age information. To change this behaviour, set the &#39;missing.contact.age&#39; option</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true"></a><span class="co">#&gt; Warning in pop_age(survey.pop, age.limits, ...): Not all age groups represented in population data (5-year age band).</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true"></a><span class="co">#&gt;   Linearly estimating age group sizes from the 5-year bands.</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true"></a><span class="co">#&gt; $mean.contacts</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true"></a><span class="co">#&gt; [1] 11.55495</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true"></a><span class="co">#&gt; $normalisation</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true"></a><span class="co">#&gt; [1] 1.03915</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true"></a><span class="co">#&gt; $contacts</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true"></a><span class="co">#&gt; [1] 0.6995727 0.7464190 1.2235173 0.9390331</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true"></a><span class="co">#&gt; $matrix</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true"></a><span class="co">#&gt; [1,] 4.1534023 2.0767011 1.2302166 0.8612967</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true"></a><span class="co">#&gt; [2,] 1.0948299 4.7138509 1.3312672 0.7414821</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true"></a><span class="co">#&gt; [3,] 0.1455146 0.7494002 4.4126024 0.5159003</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true"></a><span class="co">#&gt; [4,] 0.2498871 0.6926217 0.9339135 1.0375529</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true"></a><span class="co">#&gt; $demography</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true"></a><span class="co">#&gt;    age.group population proportion year</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true"></a><span class="co">#&gt; 1:     [0,1)     690312 0.01146507 2005</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true"></a><span class="co">#&gt; 2:     [1,5)    2761248 0.04586028 2005</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true"></a><span class="co">#&gt; 3:    [5,15)    7380235 0.12257488 2005</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true"></a><span class="co">#&gt; 4:       15+   49378217 0.82009977 2005</span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true"></a><span class="co">#&gt; </span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true"></a><span class="co">#&gt; $participants</span></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true"></a><span class="co">#&gt;    age.group participants proportion</span></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true"></a><span class="co">#&gt; 1:     [0,1)           15 0.01483680</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true"></a><span class="co">#&gt; 2:     [1,5)           80 0.07912957</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true"></a><span class="co">#&gt; 3:    [5,15)          204 0.20178042</span></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true"></a><span class="co">#&gt; 4:       15+          712 0.70425321</span></span></code></pre></div>
+</div>
+<div id="plotting" class="section level1">
 <h1>Plotting</h1>
-
 <p>The contact matrices can be plotted, for example, using the <code>geom_tile</code> function of the <code>ggplot2</code> package.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="kw">library</span>(<span class="st">&quot;reshape2&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a><span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a>df &lt;-<span class="st"> </span><span class="kw">melt</span>(mr, <span class="dt">varnames =</span> <span class="kw">c</span>(<span class="st">&quot;age1&quot;</span>, <span class="st">&quot;age2&quot;</span>), <span class="dt">value.name =</span> <span class="st">&quot;contacts&quot;</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dt">x =</span> age2, <span class="dt">y =</span> age1, <span class="dt">fill =</span> contacts)) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a><span class="st">    </span><span class="kw">geom_tile</span>()</span></code></pre></div>
+<p><img src="data:image/png;base64,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bYLeRBKe9FGkK664InxVzGV9flWvH4efcouZkZVRArH6oWymWP2gZyp09Bue6IdwjcTLH330UcQd5LFMY9mXV7I+QRD+iJ71W91c3rnlllvK241tSQqUdU5y90Bl52UMGdad+jyi/vLRdPHFF6d8c4ieptPrv3rjCcm9AP3g3irdOfXRI70uq/c6ePmHo/6BpY8oXXjhheluAuUhYAQIwPwgIIAAAgggUAkCnIKuBHQOiQACCCCAAAGYnwEEEEAAAQQqQYDHkCoBnUMiEGQBvT6uU2zqjWUXXXSR89KEILeZtiFwMgKMgE9GjX0QQCCmwJ/+9CdzQ5++IlDnvL7sssvkzjvvjJmXlQhkuwA3YWX7TwDtRyBNAtYztHLOOefID37wA/nRj35kStV36+rkI/q6S31lJgkBBEoFOAVdasESAoEXeOONN8wLIXT+4zPOOMO8PvHyyy932q2njadMmWIedevSpYt861vfkrlz55qX2Gsmncv6qaeeMtubNGkiN910k1xyySVmf50/Wd+69b3vfc8pr1evXubZWn2bEAHYYWEBASPAKWh+EBDIEgF9F+7gwYPl7LPPNi+f17mS+/fvb04VK4HOgazBVAOuvqBe34Orbwd69dVXjZBOlt+5c2exZocybwzSucgHDBggetpZk74E5De/+Y00btzYfNZ/XnnlFTPBvu5HQgCBSAFGwJEefEIgsAI6p/Ezzzxj5qLWRmow1lGsvgtXR7s6d7gG5ffff9+MWu+44w4599xzzduaNP+4ceNky5YtZvSrsxnptd02bdqY9+fecMMNEbNIaf7PP/9cfvKTn8gDDzwgzZs311UkBBAIEyAAh2GwiECQBR566CETQKdNmybLli0zL+zQNzMdPnzYNFtnWNPT0eHTMep0pvbbthYsWGBmTXv88ccdJp3uUV+puHHjxogg+95775lR8ne/+13n9LWzEwsIIGAEOAXNDwICWSLw7LPPyllnnSUaQHU0fM0114i+bN5Oegq67Eg1fI5xnZqxZs2a5vWJOveyfml+HeXqsp00YF966aVy++23y/PPPx+xzc7DdwQQEGEEzE8BAlkgoCNdPRWsp5nvvvtu02LrDUJivVnLOcWsp5s/+eSTCI3Zs2c7nwsKCmTOnDny6KOPOkFV52X+97//bU5la0a9Xqxl/t///Z8JwM7OLCCAQJRA6Z+t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" /><!-- --></p>
+</div>
 
-<pre><code class="r">library(&quot;reshape2&quot;)
-library(&quot;ggplot2&quot;)
-df &lt;- melt(mr, varnames = c(&quot;age1&quot;, &quot;age2&quot;), value.name = &quot;contacts&quot;)
-ggplot(df, aes(x = age2, y = age1, fill = contacts)) + theme(legend.position = &quot;bottom&quot;) + 
-    geom_tile()
-</code></pre>
 
-<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAAFoCAYAAAB65WHVAAAEGWlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPrtzZyMkzlNsNIV0qD8NJQ2TVjShtLp/3d02bpZJNtoi6GT27s6Yyc44M7v9oU9FUHwx6psUxL+3gCAo9Q/bPrQvlQol2tQgKD60+INQ6Ium65k7M5lpurHeZe58853vnnvuuWfvBei5qliWkRQBFpquLRcy4nOHj4g9K5CEh6AXBqFXUR0rXalMAjZPC3e1W99Dwntf2dXd/p+tt0YdFSBxH2Kz5qgLiI8B8KdVy3YBevqRHz/qWh72Yui3MUDEL3q44WPXw3M+fo1pZuQs4tOIBVVTaoiXEI/MxfhGDPsxsNZfoE1q66ro5aJim3XdoLFw72H+n23BaIXzbcOnz5mfPoTvYVz7KzUl5+FRxEuqkp9G/Ajia219thzg25abkRE/BpDc3pqvphHvRFys2weqvp+krbWKIX7nhDbzLOItiM8358pTwdirqpPFnMF2xLc1WvLyOwTAibpbmvHHcvttU57y5+XqNZrLe3lE/Pq8eUj2fXKfOe3pfOjzhJYtB/yll5SDFcSDiH+hRkH25+L+sdxKEAMZahrlSX8ukqMOWy/jXW2m6M9LDBc31B9LFuv6gVKg/0Szi3KAr1kGq1GMjU/aLbnq6/lRxc4XfJ98hTargX++DbMJBSiYMIe9Ck1YAxFkKEAG3xbYaKmDDgYyFK0UGYpfoWYXG+fAPPI6tJnNwb7ClP7IyF+D+bjOtCpkhz6CFrIa/I6sFtNl8auFXGMTP34sNwI/JhkgEtmDz14ySfaRcTIBInmKPE32kxyyE2Tv+thKbEVePDfW/byMM1Kmm0XdObS7oGD/MypMXFPXrCwOtoYjyyn7BV29/MZfsVzpLDdRtuIZnbpXzvlf+ev8MvYr/Gqk4H/kV/G3csdazLuyTMPsbFhzd1UabQbjFvDRmcWJxR3zcfHkVw9GfpbJmeev9F08WW8uDkaslwX6avlWGU6NRKz0g/SHtCy9J30o/ca9zX3Kfc19zn3BXQKRO8ud477hLnAfc1/G9mrzGlrfexZ5GLdn6ZZrrEohI2wVHhZywjbhUWEy8icMCGNCUdiBlq3r+xafL549HQ5jH+an+1y+LlYBifuxAvRN/lVVVOlwlCkdVm9NOL5BE4wkQ2SMlDZU97hX86EilU/lUmkQUztTE6mx1EEPh7OmdqBtAvv8HdWpbrJS6tJj3n0CWdM6busNzRV3S9KTYhqvNiqWmuroiKgYhshMjmhTh9ptWhsF7970j/SbMrsPE1suR5z7DMC+P/Hs+y7ijrQAlhyAgccjbhjPygfeBTjzhNqy28EdkUh8C+DU9+z2v/oyeH791OncxHOs5y2AtTc7nb/f73TWPkD/qwBnjX8BoJ98VQNcC+8AAAA4ZVhJZk1NACoAAAAIAAGHaQAEAAAAAQAAABoAAAAAAAKgAgAEAAAAAQAAAWigAwAEAAAAAQAAAWgAAAAAeJUcbwAAKbNJREFUeAHt3Qt4FNX5x/E3FxJiAuESQBEJAkG5KigiFaXiDVSsRqRPtY+Ftt5qpa2ItbR/RcQK4qWKWhVbrIpivUHVVklLtUCfIooVAgIBEQQiIAkhQEgIyX/eQ3Yashey2exkJvOdNmZ2Zs7Mmc9Zfjk5OzNJqLYmYUIAAQQQcJ1AoutqRIUQQAABBIwAAc0bAQEEEHCpAAHt0oahWggggAABzXsAAQQQcKlAskvrdcxqlZaWHnMbt2yQmJgo+lksn8dGbpGkpCQ5fPhw5I18vpb3Uv3eAF57L6WkpEhqamrQyXk2oPft2xd0Mm5d0Lp1a6mqqpL9+/e7tYpNXi8Nno4dO8rXX3/d5HVxcwUyMzPNDzHeS+FbyYvvpYyMjJABzRBH+HZmDQIIINCkAgR0k/JzcAQQQCC8AAEd3oY1CCCAQJMKENBNys/BEUAAgfACBHR4G9YggAACTSrg2as4Iqn1+dboSKtZVyOQkNQCi2MIJLdsdYwtWK0CgybNdxlEmVWfTFfVac7FJVHXhx501GQUQAABBJwRIKCdceYoCCCAQNQCBHTUZBRAAAEEnBEgoJ1x5igIIIBA1AIEdNRkFEAAAQScESCgnXHmKAgggEDUAgR01GQUQAABBJwRIKCdceYoCCCAQNQCBHTUZBRAAAEEnBEgoJ1x5igIIIBA1AIEdNRkFEAAAQScESCgnXHmKAgggEDUAgR01GQUQAABBJwRIKCdceYoCCCAQNQCBHTUZBRAAAEEnBEgoJ1x5igIIIBA1AIEdNRkFEAAAQScESCgnXHmKAgggEDUAgR01GQUQAABBJwRIKCdceYoCCCAQNQCBHTUZBRAAAEEnBEgoJ1x5igIIIBA1AIEdNRkFEAAAQScESCgnXHmKAgggEDUAgR01GQUQAABBJwRIKCdceYoCCCAQNQCBHTUZBRAAAEEnBEgoJ1x5igIIIBA1ALJUZeIscC6deskJydHEhMTpby8XDZu3GjvsU+fPvY8MwgggIDfBRztQS9fvlxuvfVWqaysNO4rV66U2bNny+LFi81XoDGqqqrk66+/DrzkOwIIIOBLAcd60Pn5+SaEu3fvbkMXFBTI2LFjpXfv3tKmTRt7ufasH3/8cfntb39rL9OZV155RQ4cOGC2veiii45axwsEEEDAzQLp6elhq5eQkBBynWMB3a9fP9GvCRMm2BXRgF67dq0sXLhQ0tLS5M4775S8vDzZtm2bfPXVVzJ37lwZMmSI9OzZ05TZvHmzlJaWSocOHSQ52bGq2/VlBgEEEGioQKTMqq6uDrnbJk25SZMmmWDWnx6TJ082oZydnS2tWrWSjz76KKhnfdddd9knUVhYaM8zgwACCLhdoKSkJGwVMzIyQq5zdAy6bg3mzZsne/fuNYsrKipEfwXo1auXnHbaadKuXTsZNGiQZGVl1S3GawQQQMAXAk3ag+7fv7/MmDFDMjMzzVCGhrJOOtwxbdo0XzQAJ4kAAgiEE3A8oPXDv8A0ePBgOfPMM81VHS1atAgs5jsCCCCAgCXQpEMc2gI6/kw4815EAAEEggWaPKCDq8QSBBBAAAEVIKB5HyCAAAIuFSCgXdowVAsBBBAgoHkPIIAAAi4VIKBd2jBUCwEEECCgeQ8ggAACLhUgoF3aMFQLAQQQIKB5DyCAAAIuFSCgXdowVAsBBBAgoHkPIIAAAi4VIKBd2jBUCwEEECCgeQ8ggAACLhUgoF3aMFQLAQQQIKB5DyCAAAIuFSCgXdowVAsBBBAgoHkPIIAAAi4VIKBd2jBUCwEEECCgeQ8ggAACLhUgoF3aMFQLAQQQIKB5DyCAAAIuFSCgXdowVAsBBBAgoHkPIIAAAi4VIKBd2jBUCwEEECCgeQ8ggAACLhUgoF3aMFQLAQQQIKB5DyCAAAIuFUh2ab2olgMCCQn8fD4Wc88x9xxrE9ZbAjs+mo/DsQQuPv9YWwSt519oEAkLEEAAAXcIENDuaAdqgQACCAQJENBBJCxAAAEE3CFAQLujHagFAgggECRAQAeRsAABBBBwhwAB7Y52oBYIIIBAkAABHUTCAgQQQMAdAgS0O9qBWiCAAAJBAgR0EAkLEEAAAXcIENDuaAdqgQACCAQJENBBJCxAAAEE3CFAQLujHagFAgggECRAQAeRsAABBBBwhwAB7Y52oBYIIIBAkAABHUTCAgQQQMAdAgS0O9qBWiCAAAJBAgR0EAkLEEAAAXcIENDuaAdqgQACCAQJENBBJCxAAAEE3CFAQLujHagFAgggECRAQAeRsAABBBBwhwAB7Y52oBYIIIBAkAABHUTCAgQQQMAdAgS0O9qBWiCAAAJBAgR0EAkLEEAAAXcIENDuaAdqgQACCAQJENBBJCxAAAEE3CFAQLujHagFAgggECSQHLSkgQvKyspkxYoV0rlzZ/O1ceNGe099+vSx5wMzO3bskBYtWki7du3MovXr10tlZaWZ79atm3zxxRfSr1+/wOZ8RwABBHwn0Gg96F27dsm8efNMyK5cuVJmz54tixcvNl91Vbdt2ya33367FBQUmFXl5eUydepUe/s9e/ZIVVWVLFq0qG5RXiOAAAK+EWi0HrSKae85JydHXn75ZRk7dqz07t1b2rRpcxRmRUWFzJo1S/r27Wsv197yOeecY8q0bdvWLNd9TZ48WYYPHy5JSUlmmfa6Dx8+LMnJyZKY2Gg/W+x6MIMAAgjES6AhmdWoAR04Me0Zr127VhYuXChpaWly5513BlZJSkqKTJ8+XebMmWMv0+1XrVol+/btk+3bt8u0adMkPT1dOnToIFu3bpXs7Gyz7fXXXy/aU9chkNdff90uzwwCCCDgdgHNs3DTwYMHQ66KS0BPmjTJBHNCQoLpBX/11Vdy0kknhayALhw1apSMHDnShPdrr71mhjZGjx4tHTt2lC1bttgB/f7779v7KCwstOeZQQABBNwuoCMA4aaMjIyQq+IyTqBj0Xv37jUH1CEN7Q1HmpYuXSqrV682m+hPklatWpn54uJiycrKilSUdQgggECzFYhLD7p///4yY8YMyczMlCFDhpgrNXTYYty4cdKlS5cgTL1a46GHHjJDIhrmOn6tkw5v9OjRI2h7FiCAAAJ+EIhLQA8ePFjOPPNMc0WHXkqnU90PDMePH2/7ai9Zx6W1t61j1Drt3LnTjEEHXtsbM4MAAgj4RKDRhjhSU1OlqKhI8vLyDJ2OPwfCWRfoGHO4cZaAde0wXrJkidQO8cA2fEcAAQT8ItBoPehOnTrJzJkzw7odaxy6bsHc3Ny6i3iNAAII+Eqg0XrQvlLjZBFAAAEHBAhoB5A5BAIIINAQAQK6IWqUQQABBBwQIKAdQOYQCCCAQEMECOiGqFEGAQQQcECAgHYAmUMggAACDREgoBuiRhkEEEDAAQEC2gFkDoEAAgg0RICAbogaZRBAAAEHBAhoB5A5BAIIINAQAQK6IWqUQQABBBwQIKAdQOYQCCCAQEMECOiGqFEGAQQQcECAgHYAmUMggAACDREgoBuiRhkEEEDAAYGQz4Pes2ePlJWVhT18+/bt7b98EnYjViCAAAIIxCQQMqD17wPef//95i9xJycHb/LKK6+YvzUY05EpjAACCCAQUSA4fa3N9Q+8lpaWml5ypL+SEnHPrEQAAQQQiEkg7Bi0/lXuzz//XIqLi2M6AIURQAABBBomELIHrbtq2bKlvPPOOw3bK6UQQAABBGIWCBvQgT2XlJTIggUL5ODBg3LKKadInz59pEOHDoHVfEcAAQQQiJNA2CEOPd7+/fvNh4HLly+XDz/8UHbv3m1eV1RUxKk67BYBBBBAICAQMaDnzp0rP/vZz+S2224z2+fm5so111wjS5YsCZTnOwIIIIBAnAQiBnSrVq3M0EbtY2/cuFG6du1aexHzCCCAAAJxEIg4Bn311VfLgAEDzPDG5s2bZdSoUaYKPXv2jENV2CUCCCCAQG2BiAGdkpIiq1atkn/84x+ydOlSufjii2XYsGG1yzOPAAIIIBAngYgBnZ+fL/oBoU7du3eXDRs2iPaku3XrZnrWrVu3jlO1Yt1tQqw78EX5lMxOvjjPWE5y04LpsRT3TdmOZ3zHN+fq5IlGDGi9akM/IBw4cKC5vO6DDz6QhIQE6du3r6xevVr09fHHH+9kfTkWAggg4BuBiB8SrlmzRiZOnCiLFy+WZ555RtatWycnn3yyvPzyy3LLLbfI/PnzfQPFiSKAAAJOC0QM6KKioqAecnl5uRQUFEiXLl1En3rHhAACCCAQH4GIQxxjxoyRyy+/3Axn6F2E//znP81jSNu1aydTpkyRF198MT61Yq8IIIAAAhKxB62hnJeXJyeeeKL5gPCGG24wl9wlJSWZ53ScfvrpECKAAAIIxEkgYkDrMfVpdnrd89ChQ828jkXr8zmys7PjVCV2iwACCCCgAhGHOLT3fO2110pOTo4cOnRIEhMTzfM5dOiDCQEEEEAgvgIRe9A65vzII4/IrFmzZPDgwbJs2TJz/TMPS4pvo7B3BBBAQAUiBnR6erp5LnS/fv1MOGuBM844Qz755BOdZUIAAQQQiKNAxCGOK6+80jx/QwNa7xrUa6Lffvttc+t3HOvErhFAAAEELIGIPWi9Y/Dvf/+7ZGVliT56NC0tTZ544gnzx2TRQwABBBCIr0DEHrQeulevXnYN9I/JMiGAAAIIOCMQsQftTBU4CgIIIIBAKAECOpQKyxBAAAEXCBDQLmgEqoAAAgiEEiCgQ6mwDAEEEHCBAAHtgkagCggggEAoAQI6lArLEEAAARcIENAuaASqgAACCIQSIKBDqbAMAQQQcIEAAe2CRqAKCCCAQCgBAjqUCssQQAABFwgQ0C5oBKqAAAIIhBIgoEOpsAwBBBBwgQAB7YJGoAoIIIBAKAECOpQKyxBAAAEXCBDQLmgEqoAAAgiEEohrQJeVlcnSpUtl06ZN9rHXrl1rz9eeWb9+vaxZs8Z8HThwQPLz82uvZh4BBBDwnUBcA3rXrl0yb948qayslOrqannppZfk0UcfDUIuLy+XqVOnyuLFi83Xnj17pKqqShYtWhS0LQsQQAABvwgc8y+qxArRuXNnycnJkTfffFNSU1MlISEhaJdffPGFnHPOOTJ27Fhp27atWa/lJk+eLMOHD5ekpKSgMixAAAEEmrtA3AM6AJibm2tmQ/WKCwoKZNWqVbJv3z7Zvn276J/W0r8o3qFDB9m6datkZ2ebsjfeeKMUFRVJly5d5MEHHwzsmu8IIICA6wXat28fto6HDh0Kuc6xgA559JqFo0aNkpEjR0pKSoq89tprZmhj9OjR0rFjR9myZYsd0D/+8Y9Fh0OOO+44KS0tjbRL1iGAAAKuEoiUWZp9oSZXBLR+kJiZmSkDBw6UgwcPmp6zVra4uFgGDRpk1/uss86y5wsLC+15ZhBAAAG3C1RUVIStYriAjuuHhGFrU7NChzJ0CKNfv37y6quvyowZM6SkpESGDh1qttB1PXr0ONZuWI8AAgg0SwHHe9C///3vbcjevXtLmzZtJCMjQ6ZPny76Eybwk2Tnzp2mJx14bRdiBgEEEPCJQFx70HrVhn6ol5eXF5JTx501nANT7TBesmSJjB8/PrCK7wgggIDvBOLag+7UqZPMnDkzLKpeqRFuClz1EW49yxFAAIHmLhDXHnRzx+P8EEAAgXgKENDx1GXfCCCAQAwCBHQMeBRFAAEE4ilAQMdTl30jgAACMQgQ0DHgURQBBBCIpwABHU9d9o0AAgjEIEBAx4BHUQQQQCCeAgR0PHXZNwIIIBCDAAEdAx5FEUAAgXgKENDx1GXfCCCAQAwCBHQMeBRFAAEE4ilAQMdTl30jgAACMQgQ0DHgURQBBBCIpwABHU9d9o0AAgjEIEBAx4BHUQQQQCCeAgR0PHXZNwIIIBCDAAEdAx5FEUAAgXgKENDx1GXfCCCAQAwCBHQMeBRFAAEE4ilAQMdTl30jgAACMQgQ0DHgURQBBBCIpwABHU9d9o0AAgjEIEBAx4BHUQQQQCCeAgR0PHXZNwIIIBCDAAEdAx5FEUAAgXgKENDx1GXfCCCAQAwCyTGUdW3RhKRmeVqN7n1oX1Gj77O57TCR91K9mjQxJa1e27FRdAL0oKPzYmsEEEDAMQEC2jFqDoQAAghEJ0BAR+fF1ggggIBjAgS0Y9QcCAEEEIhOgICOzoutEUAAAccECGjHqDkQAgggEJ0AAR2dF1sjgAACjgkQ0I5RcyAEEEAgOgECOjovtkYAAQQcEyCgHaPmQAgggEB0AgR0dF5sjQACCDgmQEA7Rs2BEEAAgegECOjovNgaAQQQcEyAgHaMmgMhgAAC0QkQ0NF5sTUCCCDgmAAB7Rg1B0IAAQSiEyCgo/NiawQQQMAxAQLaMWoOhAACCEQnQEBH58XWCCCAgGMCBLRj1BwIAQQQiE6AgI7Oi60RQAABxwQIaMeoORACCCAQnQABHZ0XWyOAAAKOCRDQjlFzIAQQQCA6AQI6Oi+2RgABBBwTIKAdo+ZACCCAQHQCBHR0XmyNAAIIOCZAQDtGzYEQQACB6ATiGtBlZWWydOlS2bRpk6nVhg0bRL/CTTt27JCioiKzOj8/P9xmLEcAAQR8IRDXgN61a5fMmzdPKisrZfbs2bJw4UJ54YUX5N133w3C3bZtm9x+++1SUFBg1lVVVcmiRYuCtmMBAggg4BeB5HifaOfOnSUnJ0ceffRReeqpp0xYT5gwQS677DL70BUVFTJr1izp27evvWzAgAEyefJkGT58uCQlJZnlGvYHDhyQNm3ayIUXXmhvywwCCCDgdoH09PSwVUxISAi5Lq496MARi4uLJTMz07xMTk6Ww4cPB1aZ7ykpKTJ9+nQ54YQTjlreoUMH2bp1q73syy+/NEMkmzdvFt1PuC+7ADMIIICASwTC5ZUuDxfQce9Bq432gHXIIjBpheozdezYUbZs2SLZ2dlm87vuussuVlhYaM8zgwACCLhdoKSkJGwVMzIyQq5zpAfdunVrCVRu//79kpaWFrIydRdqzzsrK6vuYl4jgAACvhBwJKBVcuzYsXL33XeL9oLHjRtncKdNm3bUEIZZWOs/OrzRo0ePWkuYRQABBPwjUL+xhkbwGDFihJx33nmSmJhovnSXvXv3Nh/4BXY/fvz4wKzs3LlTdAxax6eZEEAAAT8KxLUHnZqaaq5rzsvLM7Y69qwBHZhGjhwp4cZelixZIrUDO1CG7wgggIBfBOLag+7UqZPMnDkzrGWky05yc3PDlmMFAggg4AeB/3Vn/XC2nCMCCCDgIQEC2kONRVURQMBfAgS0v9qbs0UAAQ8JENAeaiyqigAC/hIgoP3V3pwtAgh4SICA9lBjUVUEEPCXAAHtr/bmbBFAwEMCBLSHGouqIoCAvwQIaH+1N2eLAAIeEiCgPdRYVBUBBPwlQED7q705WwQQ8JAAAe2hxqKqCCDgLwEC2l/tzdkigICHBAhoDzUWVUUAAX8JEND+am/OFgEEPCRAQHuosagqAgj4S4CA9ld7c7YIIOAhAQLaQ41FVRFAwF8CBLS/2puzRQABDwkQ0B5qLKqKAAL+EiCg/dXenC0CCHhIgID2UGNRVQQQ8JcAAe2v9uZsEUDAQwIEtIcai6oigIC/BAhof7U3Z4sAAh4SSKi2Jg/V165qYWGhPe/2mdatW8vhw4dl//79bq9qk9UvMTFROnbsKF9//XWT1cELB87MzJTKykreSxEay4vvpYyMDGnVqlXQWdGDDiJhAQIIIOAOAQLaHe1ALRBAAIEgAQI6iIQFCCCAgDsECGh3tAO1QAABBIIECOggEhYggAAC7hDw7FUcxcXF7hCsRy02btwoqamp0qVLl3ps7c9NKioq5JNPPpGhQ4f6E6CeZ63vpZYtW8qJJ55YzxL+26y8vFw+/fRTOfvssz1z8tqmaWlpQfX1bEAHnYmLF9x9993mH9RNN93k4lo2bdV27twpF1xwgaxatappK+Lyo//mN7+R7OxsueGGG1xe06arnl6qeckll8hnn33WdJVopCMzxNFIkOwGAQQQaGyBpCnW1Ng7ZX9HC6Snp0vPnj3NjRhHr+FVQCBwc0G/fv0Ci/geQiDwXurQoUOItSxSAX0vderUSZrDe4khDt7TCCCAgEsFGOJohIbZsWOHLF26VIqKiszeNmzYIPoVblq3bp1UVVWZ1fn5+eE2a3bLly9fftS4oLoFzGqf7LZt22TNmjXma9euXVJWVhbRs3ZZr87Xtlm/fr19/gcOHAg6Jf0QbNOmTfZyP3rZJ2/N1P73pDaB945+9/pEQDdCC/7nP/+RZcuWmdCdPXu2LFy4UF544QV59913g/au/xBvvfVW8zwFXalBvWjRoqDtmuOCJ598UvQfkE4aKrfffrsUFBQEneqDDz4oixcvNl9btmwxn27/7W9/M88zCdq4mSwI2KjP1KlT7fPfs2fPUWeogX3ffffJ+++/by/3o1fg5Ov+e1q5cqXov8HA+yewnbrVtQysc/P3ZDdXzkt169Onj2RlZZnLe5566ikTwBMmTJDLLrvMPg3tLesbp3v37vayAQMGyOTJk2X48OGSlJRkL2+OM3oZ0VlnnSV6Sd2sWbOkb9++QacZ+M3ie9/7nuh4a8BEnTSULr300qAyzWFBwObzzz+Xc845R8aOHStt27YNOjV9b5188sly6NAhs86vXnryof496Q98tevdu7e0adPG9vvvf/9rOgXXXHONvcwLM/SgG7GV9NpsfdqYTsnJyUE9Pv3QQnuNes1j7Uk/8Nm6dWvtRc16PiUlRaZPny4nnHBC0Hmqg/au58yZIz//+c9l9erVZpvTTz/d/JYSVKCZLdCA0UsNn3vuOfnFL34R9NS6O+64Q8444wz7rP3sFerfk/rpb1uPPfaY6G8W+rDOuXPnygcffCAff/yxmS8tLbX93D5DD7oRW0h7e4Eeje5WQ7o+kz5mU3+V1+tb/T7pzTw6PHTccceZceeXX37Z9LT1B58fHkU6atQoGTlypOgPsddee80Mf40ePTrs28LvXnVhJk2aZIbEEhISzG+m+gNMe9P671I7Rjqvtl6Z6EE3Ykvpc59LSkrMHvXZz6HuDAp1OO156/AIk5jfJN577z1DcfDgQfsZueoZ+O2kOTvph82B3xpqn3+4c9YA8rNXXZd58+bJ3r17zWIdStNhskGDBpnLXLt27Wrm9a5er0z16+J55WxcUE8d/9I7BzV0A3cO3nzzzfL000+HrZ3+I+vRo0fY9X5Y8dZbb5kfaHoHmPag9UoGvZ71uuuuM6f/5ZdfSq9evZo9hf7a/tBDD5kPmjVc9P2kFu+8844ZHqsLcNJJJ/naq65H//79ZcaMGeaH+ZAhQ6Rdu3ZmE88+QkD/ogpTbALz58+vtsa97J1YH+BUW39BxX79/PPP2/N1Z6xLzaqtf5B1FzfL19YPqrDnZX04Vm1dDWOvt65msOd1xhpTrLZ+kB21rDm9qGtT+/yt3x6q//znP0c83drb64bN3SsShjWcUW31niNt4pl1DHHU/RHcgNc6PPGvf/3L9HS0uI49a+8vMI0ZMyYwG/R9yZIlMn78+KDlzXGBfhiql0CFmrQnqD2ewFR7nFAvkVLj5vyAoLo2tc9fP9u48sorAzQhv9fe3g9eIRFqFur4c4sWLSJt4pl13Enomaaioggg4DeB/3Xz/HbmnC8CCCDgcgEC2uUNRPUQQMC/AgS0f9ueM49RQG/l12dYDx482HyOoM8NYUKgMQUYg25MTfblGwG91frUU081d6jpB5z33nuvuXNUn6PBhEBjCdCDbixJ9uMJAe3lXnXVVaLPTtG78GoH6v333y+nnHKKDBw40PSIX3/9dXNOTzzxhLlOXZ+hcs8995hlGtAvvviiaDjr1K1bt6Oe1GcW8h8EYhXwzAWBVBSBRhDQa86t3q7Zk/XMj2rrrrJq69kM5jp2K5ird+/eXW09KrbaetBO9R//+MdqvU49Jyen2vqTXGbdeeedV63XbNeetLx1g0T1ggULai9mHoGYBbiTMNafcJT3lMDEiRPNw4ieffZZWbFiheg1s3obuT7yVa9X1zvP9Oviiy8252WFrrkGO3AnqD4j5I033pBf//rXZr3eMarPytCnpF1xxRWesqCy7hdgiMP9bUQNG1FAn6I3btw42bdvn/zoRz8yz/qwujnm4UzW3Z/2kQI3GukfFNCn7ulDdvRLy1x44YVmOx0uOf/88+Xqq6+W//u//7PLMoNAYwkQ0I0lyX48IaDPtHjggQfMcy30oTkaspWVlab3q71lfai7PhslLy/PnE9ubq65Q1R7ydrD1ud56+NQ9elo+mzqn/70p+axoJ44eSrpOQGGODzXZFQ4FgENVB3m0Ee76nCFPulMH8Q0bNgwGTFihHl99tlnmz84qg8rssafzQObzj33XPOYSv1jpBrWb7/9tnm+sD7ISPenkz6n2S9/HSeWNqBs/QW4zK7+VmzZTAR0KEPHnfXxsIFJ/5KJ9qatDwHNIh26ePjhh01g6wLtMevjPzXUmRBwSoCAdkqa47haQJ8hrH+O66KLLjJDHPosYesphc3moTuuxqdyYQUI6LA0rPCbgPas9Y+Q6t+y0+uh9QoPJgSaUoCAbkp9jo0AAghEEOAqjgg4rEIAAQSaUoCAbkp9jo0AAghEECCgI+CwCgEEEGhKAQK6KfU5NgIIIBBBgICOgMMqBBBAoCkFCOim1OfYCCCAQAQBAjoCDqsQQACBphQgoJtSn2MjgAACEQQI6Ag4rEIAAQSaUoCAbkp9jo0AAghEECCgI+CwCgEEEGhKAQK6KfU5NgIIIBBBgICOgMMqBBBAoCkFCOim1OfYCCCAQAQB/uRVBBxWeU/guhsnypq1X4gkWs9ytp7nrP+TxERrVvsi1it9xHNCkiTospp19nZibZMUKHdkG7POKvvts0+XDz/KP7JPq6y1U7MP3Wdg/7rPo17rwayyR45lrdP15tg1y611PbpkyYGKw7KjeJ+1LvlIPa26J9Ts/39lk8y+jhzLqpueW5Ier+Zc9DhJuo3WR9cnydk57WTZFyVm3q6jHsOco9ar5njWfhLMftTHKpts7UctrPrqa7H2e373FjJuYAtrOZOTAgS0k9ocK+4ChTt2yeavttWEoQbd/wLUhKX18khIaigFQlODSVdYyzT0NPxqgi8QsGXlFbJl+04TkiaIa4LXlDFBZpU1ARwINg033deR5WbeCs4jx7b2b0I0Udq3SZfSskOydWeJtc4KTN2H7s8O6CTrZ40u07JHvpsQ1RDXQA4EtO7Pem3OwwRvkhw8dFi2Fx+0llnb6XpTz8PmHLU+CUlVR9aZgLbm9XtCtVWNarNfSbLmzQ+CBCk5qMuYnBawWpwJAQQQQMCNAvSg3dgq1Ml1Ahs3b49Lnb7Zs1/KD1XFZd+bvzkQl/2yU+cECGjnrDmShwVWrN5g/brf+L9wbv9mrz0M0tg8q7eWmqGUxt4v+3NOoPHfcc7VnSMhgAACzVqAgG7WzcvJIYCAlwUIaC+3HnVHAIFmLUBAN+vm5eQQQMDLAgS0l1uPuiOAQLMWIKCbdfNycggg4GUBAtrLrUfdEUCgWQsQ0M26eZv+5GbNmiU7duyIuiIVFRVy3333RV2OAgg0JwECujm1pgvP5cknnxQN22inoqIief7556MtFrftk/QZHXGYzCNA4rBf3WWcqhyn2rLbUALxedeFOhLLPCVQVVUlP/nJT+SUU06Rb3/727J48WJT/0WLFslll10mp512mkyZMkVKSkrk0KFDcv7558vNN98s3bp1kyFDhsjmzZvl8ccfN9+vuuoqKS4ulk8++USGDh0qvXr1kp49e8o777xj9rlz504ZNWqUOdaVV14phYWFMnHiRNm2bZtcd911omF94YUXmvUDBgyQDz74wHHL3EuGxeWY/XucICd3bheXfV8yoFNc9stOnRMgoJ2z9tSRHnroITM08emnn5qg/eUvfykapGPGjJF7771Xli9fbtY/99xzUl1dbUJz4MCB8uWXX5qAfvrpp2XChAmSnZ0tb731lrRt21buv/9+mTZtmqxfv14eeOABewhj3LhxMmLECFm7dq1cdNFF8uijj8rDDz8sJ554osydO1deeukl6d+/v6xbt06eeuopee+99zxlSWURaKgAAd1QuWZeTnup1157rRx33HGivdZ///vfJpR79+4tZ555pqSkpMiNN94or776qpFITk422+sLXf/NN98ECb3++uvWo4WT5JFHHpFXXnlF9u7da8J9yZIlMn78ePNoy1tvvVUefPDBo8pqr1tD+vrrr5ddu3aZHxBHbcALBJqpAA9LaqYNG+tpaQCnp6fbu9FhhlatWpnADixs2bKl7N6927zUINf1OmkIa6+67nTppZdKWlqaXH755SaQJ02aJDqUostSU1PN5vpag7v2NHjwYFm5cqW8+eabMnPmTPOlPzBCTb+4ZZzs2l1srbKe76zPMtaNzECvvjb/txZY/RIzr/+xvuwVgde6pGZe92F9tc5Il0F9ex7ZvqbMkWdIH9m/vb1drmYfNa+PbFtrnzXLU1OSpcqiqjysT7TTeuk2NWXNvO65plzNd/uhTfpHCfS50dZ/9VnR5hj6Quet/2WkJUu/rm10gfV/a4mpd53tao6h29h1tJ4bfVQZa3/ZbejLWSiOTwS04+TeOKCOBesY8ciRI2X79u1mjFlDUocn9KqMTp06ifaItbccadKg1w8JDx48KB9++KEJdA1zvbqjsrLShLmOP7///vtm+OSNN96Qv/zlL/LYY4/ZHy7OmTPHlLvjjjvMmHSXLl3MuHeLFsF/4WP0yBGRqsM6BDwlQEB7qrmcq6x+sLd06VL51re+ZcJQe67ay9Wx6dzcXCkrKzOv58+fH7FSWn7YsGFmX/qh4/Dhw6Vdu3bSp08f8wGjBrcG769+9Sv53e9+ZwL7D3/4g9lGe+RnnXWWCe8rrrjCBLf+cJg6daqECueIFWElAh4USLB+FQ3+XdSDJ0KV4yNw4MCBo4Y1AkcpLS21hzQCy8J91zDXYQyd9u/fLzpeHRjSqF1G19UeVtF1tcvqMXU/Wp4JAT8IENB+aGXOEQEEPCnAyL8nm41KI4CAHwT4XdEPrcw5RiVw+PBhWbZsmZx66qlmLLx2YR0z1w9LA5OOkdd3OlZZvXrl448/Nh+8tm7dur67NTfyFBQU2NtrWb0cMjDp9et6fbpOuk7Pi8kbAgS0N9qJWjokoOGsN8voB6F6PfZtt90mF1xwgX10vaNSl+ulfzpFE9CRyuqHn9dcc42MHj1a7rnnHsnLyxO9jLE+k15ls2DBArPpihUrRK9y0RuIApNeEaP779ixo3Tv3p2ADsB44Dtj0B5oJKronMCWLVtEQ04vM9Rrrf/0pz/JM888Y1dAr2bp27evCeasrCx7eX1mIpXVq2P09nc97vTp002I6nw0k37Iqtea65U1eudmYNLQ10sV9YPZwLXqgXV8d7cAPWh3tw+1c1iga9euol/ak9Y7Hn/4wx8eVQO99V2HIfQWdL3i5Nlnnz1qfaQXkcpu2rTJPG9Ey+vt8fosk2gnvUxRb5uvHc66j/z8fHNbvQ6DfOc735Gbbrop2l2zfRMJENBNBM9h3SugD3/6/ve/bwJTe6S1J+1NZ2RkmLvudBhEQy8nJ6f2JmHnI5XVuy/1h4JOegOP3swTzaR3YOozT/S2+brTZ599Zsaedb86JKO36B+5a7Dulrx2mwBXcbitRahPkwpo0H33u98148H6dL66k/aq9bZ3nfRDv2g+zItUVj/UW716tdnvmjVrzJP7zIt6/keHZfRhVXXHrTWUp0yZYvai83odOeFcT1QXbEYP2gWNQBXcIzBv3jzzaNU9e/aYJ+ede+655uFMekekjknr9xtuuEHat29vboPXW97rO4UqO3v2bHPjjfbYb7nlFvnrX/9qQvS8886r727Ndhru+lCrwLRq1Sp54oknzPj58ccfLz/4wQ8k0XrGhn4AyeQdAT4k9E5bUVOXCOjNtzoMos8ZiXY6Vtny8vKQd1lGe5y62+vzUBpS37r74bWzAgS0s94cDQEEEKi3AGPQ9aZiQwQQQMBZAQLaWW+OhgACCNRbgICuNxUbIoAAAs4KENDOenM0BBBAoN4CBHS9qdgQAQQQcFaAgHbWm6MhgAAC9RYgoOtNxYYIIICAswIEtLPeHA0BBBCotwABXW8qNkQAAQScFSCgnfXmaAgggEC9Bf4f0M60qQlJ9sIAAAAASUVORK5CYII=" alt="plot of chunk unnamed-chunk-16"/></p>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
 
 </body>
-
 </html>
