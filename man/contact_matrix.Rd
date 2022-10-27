@@ -15,19 +15,24 @@ contact_matrix(
   counts = FALSE,
   symmetric = FALSE,
   split = FALSE,
+  sample.participants = FALSE,
   estimated.participant.age = c("mean", "sample", "missing"),
   estimated.contact.age = c("mean", "sample", "missing"),
   missing.participant.age = c("remove", "keep"),
-  missing.contact.age = c("remove", "sample", "keep"),
+  missing.contact.age = c("remove", "sample", "keep", "ignore"),
   weights = c(),
   weigh.dayofweek = FALSE,
+  weigh.age = FALSE,
+  weight.threshold = NA,
   sample.all.age.groups = FALSE,
-  quiet = FALSE,
+  return.part.weights = FALSE,
+  return.demography = NA,
+  per.capita = FALSE,
   ...
 )
 }
 \arguments{
-\item{survey}{a \code{\link{survey}} object}
+\item{survey}{a \code{\link[=survey]{survey()}} object}
 
 \item{countries}{limit to one or more countries; if not given, will use all countries in the survey; these can be given as country names or 2-letter (ISO Alpha-2) country codes}
 
@@ -35,11 +40,11 @@ contact_matrix(
 
 \item{age.limits}{lower limits of the age groups over which to construct the matrix}
 
-\item{filter}{any filters to apply to the data, given as list of the form (column=filter_value) - only contacts that have 'filter_value' in 'column' will be considered}
+\item{filter}{any filters to apply to the data, given as list of the form (column=filter_value) - only contacts that have 'filter_value' in 'column' will be considered. If multiple filters are given, they are all applied independently and in the sequence given.}
 
-\item{n}{number of matrices to sample}
+\item{n}{deprecated; number of bootstrap samples to generate}
 
-\item{bootstrap}{whether to sample participants and contacts randomly using a bootstrap; by default, will use bootstrap if n > 1}
+\item{bootstrap}{deprecated; whether to bootstrap contact matrices}
 
 \item{counts}{whether to return counts (instead of means)}
 
@@ -47,26 +52,36 @@ contact_matrix(
 
 \item{split}{whether to split the number of contacts and assortativity}
 
+\item{sample.participants}{whether to sample participants randomly (with replacement); done multiple times this can be used to assess uncertainty in the generated contact matrices. See the "Bootstrapping" section in the vignette for how to do this..}
+
 \item{estimated.participant.age}{if set to "mean" (default), people whose ages are given as a range (in columns named "..._est_min" and "..._est_max") but not exactly (in a column named "..._exact") will have their age set to the mid-point of the range; if set to "sample", the age will be sampled from the range; if set to "missing", age ranges will be treated as missing}
 
-\item{estimated.contact.age}{if set to "mean" (default), people whose ages are given as a range (in columns named "..._est_min" and "..._est_max") but not exactly (in a column named "..._exact") will have their age set to the mid-point of the range; if set to "sample", the age will be sampled from the range; if set to "missing", age ranges will be treated as missing}
+\item{estimated.contact.age}{if set to "mean" (default), contacts whose ages are given as a range (in columns named "..._est_min" and "..._est_max") but not exactly (in a column named "..._exact") will have their age set to the mid-point of the range; if set to "sample", the age will be sampled from the range; if set to "missing", age ranges will be treated as missing}
 
 \item{missing.participant.age}{if set to "remove" (default), participants without age information are removed; if set to "keep", participants with missing age are kept and treated as a separate age group}
 
-\item{missing.contact.age}{if set to "remove" (default), participants that that have contacts without age information are removed; if set to "sample", contacts without age information are sampled from all the contacts of participants of the same age group; if set to "keep", contacts with missing age are kept and treated as a separate age group}
+\item{missing.contact.age}{if set to "remove" (default), participants that have contacts without age information are removed; if set to "sample", contacts without age information are sampled from all the contacts of participants of the same age group; if set to "keep", contacts with missing age are kept and treated as a separate age group; if set to "ignore", contact with missing age are ignored in the contact analysis}
 
-\item{weights}{columns that contain weights}
+\item{weights}{column names(s) of the participant data of the \code{\link[=survey]{survey()}} object with user-specified weights (default = empty vector)}
 
-\item{weigh.dayofweek}{whether to weigh the day of the week (weight 5 for weekdays ans 2 for weekends)}
+\item{weigh.dayofweek}{whether to weigh social contacts data by the day of the week (weight (5/7 / N_week / N) for weekdays and (2/7 / N_weekend / N) for weekends)}
+
+\item{weigh.age}{whether to weigh social contacts data by the age of the participants (vs. the populations' age distribution)}
+
+\item{weight.threshold}{threshold value for the standardized weights before running an additional standardisation (default 'NA' = no cutoff)}
 
 \item{sample.all.age.groups}{what to do if bootstrapping fails to sample participants from one or more age groups; if FALSE (default), corresponding rows will be set to NA, if TRUE the sample will be discarded and a new one taken instead}
 
-\item{quiet}{if set to TRUE, output is reduced}
+\item{return.part.weights}{boolean to return the participant weights}
 
-\item{...}{further arguments to pass to \code{\link{get_survey}}, \code{\link{check}} and \code{\link{pop_age}} (especially column names)}
+\item{return.demography}{boolean to explicitly return demography data that corresponds to the survey data (default 'NA' = if demography data is requested by other function parameters)}
+
+\item{per.capita}{wheter to return a matrix with contact rates per capita (default is FALSE and not possible if 'counts=TRUE' or 'split=TRUE')}
+
+\item{...}{further arguments to pass to \code{\link[=get_survey]{get_survey()}}, \code{\link[=check]{check()}} and \code{\link[=pop_age]{pop_age()}} (especially column names)}
 }
 \value{
-a list of sampled contact matrices, and the underlying demography of the surveyed population
+a contact matrix, and the underlying demography of the surveyed population
 }
 \description{
 Samples a contact survey using a bootstrap
