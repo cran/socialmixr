@@ -10,7 +10,7 @@
 #' @param n deprecated; number of bootstrap samples to generate
 #' @param bootstrap  deprecated; whether to bootstrap contact matrices
 #' @param counts whether to return counts (instead of means)
-#' @param symmetric whether to make matrix symmetric, such that c_{ij}N_i = c{ji}N_j.
+#' @param symmetric whether to make matrix symmetric, such that \eqn{c_{ij}N_i = c_{ji}N_j}.
 #' @param split whether to split the number of contacts and assortativity
 #' @param sample.participants whether to sample participants randomly (with replacement); done multiple times this can be used to assess uncertainty in the generated contact matrices. See the "Bootstrapping" section in the vignette for how to do this..
 #' @param estimated.participant.age if set to "mean" (default), people whose ages are given as a range (in columns named "..._est_min" and "..._est_max") but not exactly (in a column named "..._exact") will have their age set to the mid-point of the range; if set to "sample", the age will be sampled from the range; if set to "missing", age ranges will be treated as missing
@@ -37,8 +37,7 @@
 #' data(polymod)
 #' contact_matrix(polymod, countries = "United Kingdom", age.limits = c(0, 1, 5, 15))
 #' @author Sebastian Funk
-contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filter, n = 1, bootstrap, counts = FALSE, symmetric = FALSE, split = FALSE, sample.participants = FALSE, estimated.participant.age = c("mean", "sample", "missing"), estimated.contact.age = c("mean", "sample", "missing"), missing.participant.age = c("remove", "keep"), missing.contact.age = c("remove", "sample", "keep", "ignore"), weights = c(), weigh.dayofweek = FALSE, weigh.age = FALSE, weight.threshold = NA, sample.all.age.groups = FALSE, return.part.weights = FALSE, return.demography = NA, per.capita = FALSE, ...) {
-
+contact_matrix <- function(survey, countries = NULL, survey.pop, age.limits, filter, n = 1, bootstrap, counts = FALSE, symmetric = FALSE, split = FALSE, sample.participants = FALSE, estimated.participant.age = c("mean", "sample", "missing"), estimated.contact.age = c("mean", "sample", "missing"), missing.participant.age = c("remove", "keep"), missing.contact.age = c("remove", "sample", "keep", "ignore"), weights = NULL, weigh.dayofweek = FALSE, weigh.age = FALSE, weight.threshold = NA, sample.all.age.groups = FALSE, return.part.weights = FALSE, return.demography = NA, per.capita = FALSE, ...) {
   surveys <- c("participants", "contacts")
 
   dot.args <- list(...)
@@ -60,23 +59,29 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
   ## get the survey
   survey <- get_survey(survey)
   ## check and get columns
-  columns <- suppressMessages(check(survey, columns = TRUE, ...))
+  columns <- suppressMessages(check(survey, ...))
 
   if (!missing(n)) {
-    warning("The 'n' option is being deprecated and will be removed ",
-            "following version 0.2.0. Please see the ",
-            "'Bootstrapping' section in the vignette for an ",
-            "alternative approach.")
+    warning(
+      "The 'n' option is being deprecated and will be removed ",
+      "in version 1.0.0. Please see the ",
+      "'Bootstrapping' section in the vignette for an ",
+      "alternative approach."
+    )
     if (n > 1) bootstrap <- TRUE
   }
   if (!missing(bootstrap)) {
-    warning("The 'bootstrap' option is being deprecated and will be removed ",
-            "following version 0.2.0. Please use the 'sample.participants'",
-            " option instead.")
+    warning(
+      "The 'bootstrap' option is being deprecated and will be removed ",
+      "in version 1.0.0. Please use the 'sample.participants'",
+      " option instead."
+    )
     if (missing(sample.participants)) sample.participants <- bootstrap
     if (bootstrap != sample.participants) {
-      stop("'bootstrap' (if given) and 'sample.participants must have the ",
-           "same value.")
+      stop(
+        "'bootstrap' (if given) and 'sample.participants must have the ",
+        "same value."
+      )
     }
   }
 
@@ -88,10 +93,10 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
         "country.name", "country.name"
       )]
     if (all(nchar(countries) == 2)) {
-      suppressWarnings(corrected_countries <-
+      corrected_countries <- suppressWarnings(
         countrycode(countries, "iso2c", "country.name"))
     } else {
-      suppressWarnings(corrected_countries <-
+      corrected_countries <- suppressWarnings(
         countrycode(countries, "country.name", "country.name"))
     }
     present_countries <- unique(as.character(survey$participants[[columns[["country"]]]]))
@@ -114,11 +119,11 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
     survey$participants[, paste(columns[["participant.age"]]) := NA_integer_]
   }
 
-  if (!(part_max.column %in% colnames(survey$participants)) &
+  if (!(part_max.column %in% colnames(survey$participants)) &&
     (columns[["participant.age"]] %in% colnames(survey$participants))
   ) {
     max.age <- max(survey$participants[, get(columns[["participant.age"]])], na.rm = TRUE) + 1
-  } else if (part_max.column %in% colnames(survey$participants) &
+  } else if (part_max.column %in% colnames(survey$participants) &&
     (columns[["participant.age"]] %in% colnames(survey$participants))) {
     max.age <- max(
       c(
@@ -146,14 +151,12 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
   ## check if any filters have been requested
   if (!missing(filter)) {
     missing_columns <- list()
-    for (table in surveys)
-    {
+    for (table in surveys) {
       if (nrow(survey[[table]]) > 0) {
         missing_columns <-
           c(missing_columns, list(setdiff(names(filter), colnames(survey[[table]]))))
         ## filter contact data
-        for (column in names(filter))
-        {
+        for (column in names(filter)) {
           if (column %in% colnames(survey[[table]])) {
             survey[[table]] <- survey[[table]][get(column) == filter[[column]]]
           }
@@ -162,7 +165,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
     }
     missing_all <- do.call(intersect, missing_columns)
     if (length(missing_all) > 0) {
-      warning("filter column(s) ", paste(missing_all), " not found")
+      warning("filter column(s) ", toString(missing_all), " not found")
     }
   }
 
@@ -170,11 +173,12 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
   if (part_min.column %in% colnames(survey$participants) &&
     part_max.column %in% colnames(survey$participants)) {
     if (estimated.participant.age == "mean") {
-      survey$participants[is.na(get(columns[["participant.age"]])) &
-        !is.na(get(part_min.column)) & !is.na(get(part_max.column)),
-      paste(columns[["participant.age"]]) :=
-        as.integer(rowMeans(.SD)),
-      .SDcols = c(part_min.column, part_max.column)
+      survey$participants[
+        is.na(get(columns[["participant.age"]])) &
+          !is.na(get(part_min.column)) & !is.na(get(part_max.column)),
+        paste(columns[["participant.age"]]) :=
+          as.integer(rowMeans(.SD)),
+        .SDcols = c(part_min.column, part_max.column)
       ]
     } else if (estimated.participant.age == "sample") {
       survey$participants[
@@ -236,11 +240,12 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
   if (min.column %in% colnames(survey$contacts) &&
     max.column %in% colnames(survey$contacts)) {
     if (estimated.contact.age == "mean") {
-      survey$contacts[is.na(get(columns[["contact.age"]])) &
-        !is.na(get(min.column)) & !is.na(get(max.column)),
-      paste(columns[["contact.age"]]) :=
-        as.integer(rowMeans(.SD)),
-      .SDcols = c(min.column, max.column)
+      survey$contacts[
+        is.na(get(columns[["contact.age"]])) &
+          !is.na(get(min.column)) & !is.na(get(max.column)),
+        paste(columns[["contact.age"]]) :=
+          as.integer(rowMeans(.SD)),
+        .SDcols = c(min.column, max.column)
       ]
     } else if (estimated.contact.age == "sample") {
       survey$contacts[
@@ -371,7 +376,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
         if (length(missing.countries) > 0) {
           stop(
             "Could not find population data for ",
-            paste(missing.countries, collapse = ", "), ". ",
+            toString(missing.countries), ". ",
             " Use wpp_countries() to get a list of country names."
           )
         }
@@ -478,7 +483,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
 
   ## assign weights to participants, to account for age variation
   if (weigh.age) {
-      # get number and proportion of participants by age
+    # get number and proportion of participants by age
     survey$participants[, age.count := .N, by = eval(columns[["participant.age"]])]
     survey$participants[, age.proportion := age.count / .N]
 
@@ -507,7 +512,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
 
   ## option to weigh the contact data with user-defined participant weights
   if (length(weights) > 0) {
-    for (i in 1:length(weights)) {
+    for (i in seq_along(weights)) {
       if (weights[i] %in% colnames(survey$participants)) {
         ## Compute the overall weight
         survey$participants[, weight := weight * get(weights[i])]
@@ -535,8 +540,8 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
 
   survey$contacts <-
     merge(survey$contacts, survey$participants,
-      by = columns[["id"]], all = F,
-      allow.cartesian = T, suffixes = c(".cont", ".part")
+      by = columns[["id"]], all = FALSE,
+      allow.cartesian = TRUE, suffixes = c(".cont", ".part")
     )
 
   setkeyv(survey$contacts, columns[["id"]])
@@ -545,8 +550,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
   if (missing.contact.age == "sample" &&
     nrow(survey$contacts[is.na(get(columns[["contact.age"]]))]) > 0) {
     for (this.age.group in
-      unique(survey$contacts[is.na(get(columns[["contact.age"]])), age.group]))
-    {
+      unique(survey$contacts[is.na(get(columns[["contact.age"]])), age.group])) {
       ## first, deal with missing age
       if (nrow(survey$contacts[!is.na(get(columns[["contact.age"]])) &
         age.group == this.age.group]) > 0) {
@@ -555,13 +559,14 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
           is.na(get(columns[["contact.age"]])) &
             age.group == this.age.group,
           paste(columns[["contact.age"]]) :=
-            sample(survey$contacts[
-              !is.na(get(columns[["contact.age"]])) &
-                age.group == this.age.group,
-              get(columns[["contact.age"]])
-            ],
-            size = .N,
-            replace = TRUE
+            sample(
+              survey$contacts[
+                !is.na(get(columns[["contact.age"]])) &
+                  age.group == this.age.group,
+                get(columns[["contact.age"]])
+              ],
+              size = .N,
+              replace = TRUE
             )
         ]
       } else {
@@ -599,20 +604,20 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
     )]
 
   ## Bootstrap
-  if (n > 1) {
-    if (!bootstrap) {
-      warning("n > 1 does not make sense if not bootstrapping. Will return just one sample.")
-      n <- 1
-    }
+  if (n > 1 && !bootstrap) {
+    warning(
+      "n > 1 does not make sense if not bootstrapping. ",
+      "Will return just one sample."
+    )
+    n <- 1
   }
   ret <- list()
-  for (i in seq_len(n))
-  {
+  for (i in seq_len(n)) {
     if (sample.participants) {
       good.sample <- FALSE
       while (!good.sample) {
         ## take a sample from the participants
-        part.sample <- sample(participant_ids, replace = T)
+        part.sample <- sample(participant_ids, replace = TRUE)
         part.age.limits <-
           unique(survey$participants[
             get(columns[["id"]]) %in% part.sample,
@@ -681,7 +686,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
       warning.suggestion <- "  Consider "
       if (na.headers) {
         warning.suggestion <- paste0(warning.suggestion, "setting ")
-        suggested.options <- c()
+        suggested.options <- NULL
         if (anyNA(rownames(weighted.matrix))) {
           suggested.options <- c(suggested.options, "'missing.participant.age'")
         }
@@ -702,7 +707,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
       }
     }
 
-    if (symmetric & prod(dim(as.matrix(weighted.matrix))) > 1) {
+    if (symmetric && prod(dim(as.matrix(weighted.matrix))) > 1) {
       if (counts) {
         warning(
           "'symmetric=TRUE' does not make sense with 'counts=TRUE'; ",
@@ -744,7 +749,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
         ## get rid of name but preserve row and column names
         weighted.matrix <- unname(weighted.matrix)
 
-        nb.contacts <- apply(weighted.matrix, 1, sum)
+        nb.contacts <- rowSums(weighted.matrix)
         mean.contacts <- sum(survey.pop$population * nb.contacts) /
           sum(survey.pop$population)
         spectrum.matrix <- weighted.matrix
@@ -825,7 +830,6 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
 
   # option to return participant weights
   if (return.part.weights) {
-
     # default
     part.weights <- survey$participants[, .N, by = list(age.group, weight)]
     part.weights <- part.weights[order(age.group, weight), ]
@@ -840,7 +844,7 @@ contact_matrix <- function(survey, countries = c(), survey.pop, age.limits, filt
     }
 
     # order (from left to right)
-    part.weights <- part.weights[order(part.weights), ]
+    part.weights <- part.weights[order(part.weights), ] # nolint
 
     # set name of last column
     names(part.weights)[ncol(part.weights)] <- "participants"

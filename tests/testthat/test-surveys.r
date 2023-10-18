@@ -4,15 +4,14 @@ test_that("list of surveys is not empty", {
   skip_if_offline("zenodo.org")
   skip_on_cran()
   skip_on_ci()
-  expect_true(nrow(list_surveys()) > 0)
+  expect_gt(nrow(list_surveys()), 0)
 })
 
 test_that("surveys can be downloaded", {
   skip_if_offline("zenodo.org")
   skip_on_cran()
-  skip_on_ci()
 
-  s <- suppressMessages(suppressWarnings(get_survey("10.5281/zenodo.1059920")))
+  s <- suppressMessages(suppressWarnings(get_survey("10.5281/zenodo.1095664"))) # nolint
 
   expect_s3_class(s, "survey")
   expect_named(
@@ -22,13 +21,17 @@ test_that("surveys can be downloaded", {
 })
 
 test_that("surveys can be cited", {
-  expect_true(class(cite(polymod)) == "bibentry")
+  expect_s3_class(get_citation(polymod), "bibentry")
 })
 
 test_that("missing surveys can't be cited", {
-  expect_error(cite.survey("bogus"), "URL")
+  expect_error(get_citation("bogus"), "URL")
 })
 
 test_that("multiple DOI's cannot be loaded", {
-  expect_error(suppressMessages(suppressWarnings(get_survey(c("10.5281/zenodo.1059920", "10.5281/zenodo.1059920")))))
+  expect_error(suppressMessages(suppressWarnings(get_survey(c("10.5281/zenodo.1095664", "10.5281/zenodo.1127693"))))) # nolint
+})
+
+test_that("deprecated functions are warned about", {
+  expect_warning(cite(polymod), "deprecated")
 })

@@ -1,24 +1,17 @@
 #' Get a survey, either from its Zenodo repository, a set of files, or a survey variable
 #'
 #' @description Downloads survey data, or extracts them from files, and returns a clean data set.
-#' @param survey a DOI (see [list_surveys()]), or a character vector of file names, or a [survey()] object (in which case only cleaning is done).
+#' @param survey a DOI or url to get the survey from, or a [survey()] object (in which case only cleaning is done).
 #' @param ... options for [clean()], which is called at the end of this
-#' @importFrom httr GET add_headers content status_code http_error
-#' @importFrom jsonlite fromJSON
-#' @importFrom curl curl_download
-#' @importFrom utils as.person read.csv
-#' @importFrom stringr str_extract_all
-#' @importFrom xml2 xml_text xml_find_first
 #' @autoglobal
 #' @examples
 #' \dontrun{
-#'   list_surveys()
-#'   peru_survey <- get_survey("https://doi.org/10.5281/zenodo.1095664")
+#' list_surveys()
+#' peru_survey <- get_survey("https://doi.org/10.5281/zenodo.1095664")
 #' }
 #' @return a survey in the correct format
 #' @export
 get_survey <- function(survey, ...) {
-
   if (inherits(survey, "survey")) {
     new_survey <- survey
   } else {
@@ -35,7 +28,7 @@ get_survey <- function(survey, ...) {
   if (!is.null(new_survey$reference)) {
     message(
       "Using ", new_survey$reference$title,
-      ". To cite this in a publication, use the 'cite' function"
+      ". To cite this in a publication, use the 'get_citation()' function"
     )
   }
 

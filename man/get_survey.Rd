@@ -7,7 +7,7 @@
 get_survey(survey, ...)
 }
 \arguments{
-\item{survey}{a DOI (see \code{\link[=list_surveys]{list_surveys()}}), or a character vector of file names, or a \code{\link[=survey]{survey()}} object (in which case only cleaning is done).}
+\item{survey}{a DOI or url to get the survey from, or a \code{\link[=survey]{survey()}} object (in which case only cleaning is done).}
 
 \item{...}{options for \code{\link[=clean]{clean()}}, which is called at the end of this}
 }
@@ -19,7 +19,7 @@ Downloads survey data, or extracts them from files, and returns a clean data set
 }
 \examples{
 \dontrun{
-  list_surveys()
-  peru_survey <- get_survey("https://doi.org/10.5281/zenodo.1095664")
+list_surveys()
+peru_survey <- get_survey("https://doi.org/10.5281/zenodo.1095664")
 }
 }

@@ -22,12 +22,13 @@
 #' @details This is a function using the basic R graphics to make it easier for users of socialmixr to visualise social contact matrices.
 #' @export
 #' @examples
+#' \dontrun{
 #' data(polymod)
-#' mij <- contact_matrix(polymod, countries = "United Kingdom", age.limits = c(0, 18,65))$matrix
+#' mij <- contact_matrix(polymod, countries = "United Kingdom", age.limits = c(0, 18, 65))$matrix
 #' matrix_plot(mij)
+#' }
 #' @author Lander Willem
 matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, num.colors = 50, main, xlab, ylab, legend.width, cex.lab, cex.axis, cex.text, color.palette = heat.colors, ...) {
-
   # check funtion arguments
   xlab <- ifelse(!missing(xlab), xlab, "Age group (year)")
   ylab <- ifelse(!missing(ylab), ylab, "Contact age group (year)")
@@ -41,7 +42,7 @@ matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, nu
   redc <- rev(color.palette(num.colors))
 
   # set legend scale
-  legend_scale <- range(pretty(mij), na.rm = T)
+  legend_scale <- range(pretty(mij), na.rm = TRUE)
   if (!is.na(min.legend)) legend_scale[1] <- min.legend
   if (!is.na(max.legend)) legend_scale[2] <- max.legend
 
@@ -70,9 +71,8 @@ matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, nu
 
   # add numeric values if num.digits != NA and cex.text > 0
   if (!is.na(num.digits) && !is.na(cex.text) && cex.text > 0) {
-
     # format results (rounding/scientific)
-    if (any(max(mij, na.rm = T) > 1)) {
+    if (any(max(mij, na.rm = TRUE) > 1)) {
       mij <- round(mij, digits = num.digits)
     } else {
       mij <- format(mij, digits = num.digits)

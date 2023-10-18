@@ -1,9 +1,10 @@
 Package: socialmixr
 Title: Social Mixing Matrices for Infectious Disease Modelling
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person("Sebastian", "Funk", , "sebastian.funk@lshtm.ac.uk", role = c("aut", "cre")),
     person("Lander", "Willem", role = "aut"),
+    person("Hugo", "Gruson", role = "aut"),
     person("Maria", "Bekker-Nielsen Dunbar", role = "ctb"),
     person("Carl A. B.", "Pearson", role = "ctb"),
     person("Sam", "Clifford", , "sj.clifford@gmail.com", role = "ctb"),
@@ -18,20 +19,21 @@ Description: Provides methods for sampling contact matrices from diary
 License: MIT + file LICENSE
 Depends: R (>= 3.5.0)
 Imports: countrycode, curl, data.table, fields, grDevices, httr,
-        jsonlite, lubridate, oai, stringr, wpp2017, xml2
-Suggests: ggplot2, knitr, reshape2, rmarkdown, testthat
+        jsonlite, lubridate, oai, wpp2017, xml2
+Suggests: ggplot2, here, knitr, purrr, reshape2, rmarkdown, roxyglobals
+        (>= 1.0.0), testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 URL: https://github.com/epiforecasts/socialmixr,
         https://epiforecasts.io/socialmixr/
 BugReports: https://github.com/epiforecasts/socialmixr/issues
-Config/Needs/roxygen2: anthonynorth/roxyglobals
-Packaged: 2022-10-27 17:54:33 UTC; eidesfun
+Packaged: 2023-10-18 21:23:50 UTC; eidesfun
 Author: Sebastian Funk [aut, cre],
   Lander Willem [aut],
+  Hugo Gruson [aut],
   Maria Bekker-Nielsen Dunbar [ctb],
   Carl A. B. Pearson [ctb],
   Sam Clifford [ctb],
@@ -41,4 +43,4 @@ Author: Sebastian Funk [aut, cre],
   Pietro Coletti [col, dtm]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
 Repository: CRAN
-Date/Publication: 2022-10-27 18:20:02 UTC
+Date/Publication: 2023-10-18 21:40:02 UTC
