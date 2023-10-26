@@ -1,6 +1,6 @@
 Package: socialmixr
 Title: Social Mixing Matrices for Infectious Disease Modelling
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: c(
     person("Sebastian", "Funk", , "sebastian.funk@lshtm.ac.uk", role = c("aut", "cre")),
     person("Lander", "Willem", role = "aut"),
@@ -30,7 +30,7 @@ RoxygenNote: 7.2.3
 URL: https://github.com/epiforecasts/socialmixr,
         https://epiforecasts.io/socialmixr/
 BugReports: https://github.com/epiforecasts/socialmixr/issues
-Packaged: 2023-10-18 21:23:50 UTC; eidesfun
+Packaged: 2023-10-25 08:18:18 UTC; eidesfun
 Author: Sebastian Funk [aut, cre],
   Lander Willem [aut],
   Hugo Gruson [aut],
@@ -43,4 +43,4 @@ Author: Sebastian Funk [aut, cre],
   Pietro Coletti [col, dtm]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
 Repository: CRAN
-Date/Publication: 2023-10-18 21:40:02 UTC
+Date/Publication: 2023-10-26 07:20:02 UTC

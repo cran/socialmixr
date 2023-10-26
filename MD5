@@ -1,7 +1,7 @@
-8e6bbc13ba3f900f7b6cf2803c0066de *DESCRIPTION
+d8c94c060099545c4d3250df2500b123 *DESCRIPTION
 b50451d6f89e4b1c9c7f8c4e51ebf018 *LICENSE
 adc581e8ccd173b32f0a2557725ae15f *NAMESPACE
-855da983f9cf70e1ce8c9cd4fee6632d *NEWS.md
+45db8625e41b40ce36963864c13900de *NEWS.md
 ac7e699bbace4dba016f2cba7d121baa *R/check.r
 16f3a1e544090b09ceaefbda273dca03 *R/cite.r
 99ede24253c1006a6ef9087e45107fc4 *R/clean.r
@@ -26,7 +26,7 @@ a96fdfcaae463720acbffe9a69c9c9df *R/survey.r
 c72792628c965a7e07b3515b6ad40e86 *inst/dev/dl_all_surveys.r
 86a38c51920799cfb6f4575f28997ab6 *inst/doc/socialmixr.R
 8d189b49f786242fbdbbfd1c7e273034 *inst/doc/socialmixr.Rmd
-a2889fb253274154b3a2a645cbf4927a *inst/doc/socialmixr.html
+8e2d79c6f6f7549064b251dedd95ebfa *inst/doc/socialmixr.html
 141a8f7011752071d6709f93007bed26 *man/check.Rd
 f650b297572fcc918afc9bd1c986ec44 *man/cite.Rd
 efff5a2a10acd9c8bca94cbba465a9c7 *man/clean.Rd
@@ -49,7 +49,7 @@ cacaa60dfd5a5740336b63e9ef0ae03c *tests/testthat.R
 2c6d35146562e453bed31b2cac91210f *tests/testthat/test-agegroups.r
 c04b8702464404ef4e1173d2ef500378 *tests/testthat/test-checks.r
 d605874c1e48c64033edfc488862bb94 *tests/testthat/test-countries.r
-99287984bec63f438ecc2d83a8f17f6e *tests/testthat/test-matrix.r
+e8035aca08b4297a8f36a7be1305d95b *tests/testthat/test-matrix.r
 4d893bc8954981fed884394f0f97ae87 *tests/testthat/test-plot.r
 ec97ac24f763c0c45e2c30e9607b1030 *tests/testthat/test-surveys.r
 8d189b49f786242fbdbbfd1c7e273034 *vignettes/socialmixr.Rmd

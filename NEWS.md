@@ -1,3 +1,8 @@
+# socialmixr 0.3.1
+
+* Tests were updated to prevent failures due to machine precision issues on
+  some platforms (#100)
+
 # socialmixr 0.3.0
 
 ## Major & breaking changes
