@@ -1,6 +1,6 @@
 Package: socialmixr
 Title: Social Mixing Matrices for Infectious Disease Modelling
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: c(
     person("Sebastian", "Funk", , "sebastian.funk@lshtm.ac.uk", role = c("aut", "cre")),
     person("Lander", "Willem", role = "aut"),
@@ -19,18 +19,18 @@ Description: Provides methods for sampling contact matrices from diary
 License: MIT + file LICENSE
 Depends: R (>= 3.5.0)
 Imports: countrycode, curl, data.table, fields, grDevices, httr,
-        jsonlite, lubridate, oai, wpp2017, xml2
+        jsonlite, lubridate, oai, wpp2017, xml2, lifecycle
 Suggests: ggplot2, here, knitr, purrr, reshape2, rmarkdown, roxyglobals
         (>= 1.0.0), testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0
 URL: https://github.com/epiforecasts/socialmixr,
         https://epiforecasts.io/socialmixr/
 BugReports: https://github.com/epiforecasts/socialmixr/issues
-Packaged: 2023-10-25 08:18:18 UTC; eidesfun
+Packaged: 2024-04-18 12:22:18 UTC; eidesfun
 Author: Sebastian Funk [aut, cre],
   Lander Willem [aut],
   Hugo Gruson [aut],
@@ -43,4 +43,4 @@ Author: Sebastian Funk [aut, cre],
   Pietro Coletti [col, dtm]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
 Repository: CRAN
-Date/Publication: 2023-10-26 07:20:02 UTC
+Date/Publication: 2024-04-18 12:52:38 UTC

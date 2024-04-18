@@ -21,20 +21,21 @@
 #  @seealso load_survey
 #' @export
 download_survey <- function(survey, dir = NULL, sleep = 1) {
-  survey <- sub("^(https?:\\/\\/(dx\\.)?doi\\.org\\/|doi:)", "", survey)
-  survey <- sub("#.*$", "", survey)
-  is.doi <- (length(survey) > 0) && all(grepl("^10.[0-9.]{4,}/[-._;()/:A-z0-9]+$", survey))
-  is.url <- (length(survey) > 0) && (is.doi || grepl("^https?:\\/\\/", survey))
 
-  if (is.url && length(survey) > 1) {
-    stop("'survey' must be of length 1")
+  if (!is.character(survey) || length(survey) > 1) {
+    stop("'survey' must be a character of length 1")
   }
 
-  if (is.doi) url <- paste0("https://doi.org/", survey) else url <- survey
+  survey <- sub("^(https?:\\/\\/(dx\\.)?doi\\.org\\/|doi:)", "", survey)
+  survey <- sub("#.*$", "", survey)
+  is.doi <- is_doi(survey)
+  is.url <- is.doi || grepl("^https?:\\/\\/", survey)
 
   if (!is.url) {
     stop("'survey' is not a DOI or URL.")
   }
+
+  if (is.doi) url <- paste0("https://doi.org/", survey) else url <- survey
 
   temp_body <- GET(
     url,
@@ -128,4 +129,13 @@ find_common_prefix <- function(vec) {
   }
 
   return(lcs)
+}
+
+##' Checks if a character string is a DOI
+##'
+##' @param x Character vector; the string or strings to check
+##' @return Logical; \code{TRUE} if \code{x} is a DOI, \code{FALSE} otherwise
+##' @author Sebastian Funk
+is_doi <- function(x) {
+  is.character(x) && grepl("^10.[0-9.]{4,}/[-._;()/:A-z0-9]+$", x)
 }

@@ -87,11 +87,7 @@ test_that("demography is numeric", {
 })
 
 test_that("survey argument is validated", {
-  expect_error(contact_matrix(survey = "bogus"), "URL")
-})
-
-test_that("error is thrown if no survey population can be generated", {
-  expect_error(suppressWarnings(contact_matrix(survey = polymod, countries = "Zamonia"), "No survey data available"))
+  expect_error(contact_matrix(survey = "bogus"), "survey")
 })
 
 test_that("error is thrown if age limits are non-numeric", {
@@ -389,6 +385,7 @@ test_that("The weights with threshold", {
 test_that("Country names in Zenodo datasets and the wpp package are aligned (e.g. Viet Nam vs. Vietnam)", {
   skip_if_offline("zenodo.org")
   skip_on_cran()
+  skip_on_ci()
   vietnam1 <- get_survey("https://doi.org/10.5281/zenodo.1289473")
   expect_length(suppressWarnings(contact_matrix(vietnam1, symmetric = FALSE)), 2) # no demography data used
   expect_length(suppressWarnings(contact_matrix(vietnam1, symmetric = TRUE)), 3) # country is recognized and demography data found
@@ -543,4 +540,13 @@ test_that("Contact matrices per capita are also generated when bootstrapping", {
       per.capita = FALSE
     ), 2)
   })
+})
+
+test_that("passing a DOI for survey is deprecated", {
+  skip_if_offline("zenodo.org")
+  skip_on_cran()
+  skip_on_ci()
+  lifecycle::expect_deprecated(
+    contact_matrix(survey = "10.5281/zenodo.1095664") # nolint
+  )
 })

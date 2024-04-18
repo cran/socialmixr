@@ -30,6 +30,7 @@
 #' @importFrom stats xtabs runif median
 #' @importFrom utils data globalVariables
 #' @importFrom countrycode countrycode
+#' @importFrom lifecycle deprecate_warn
 #' @import data.table
 #' @export
 #' @autoglobal
@@ -56,10 +57,18 @@ contact_matrix <- function(survey, countries = NULL, survey.pop, age.limits, fil
   missing.participant.age <- match.arg(missing.participant.age)
   missing.contact.age <- match.arg(missing.contact.age)
 
-  ## get the survey
-  survey <- get_survey(survey)
-  ## check and get columns
-  columns <- suppressMessages(check(survey, ...))
+  error_string <-
+    "must be a survey object (created using `survey()` or `get_survey()`)"
+
+  if (is_doi(survey)) {
+    deprecate_warn(
+      "0.3.2", paste0("contact_matrix(survey = '", error_string, "')"),
+      details = "Passing a DOI will be removed in version 0.4.0."
+    )
+    survey <- get_survey(survey)
+  } else if (!inherits(survey, "survey")) {
+    stop(error_string)
+  }
 
   if (!missing(n)) {
     warning(
@@ -85,13 +94,20 @@ contact_matrix <- function(survey, countries = NULL, survey.pop, age.limits, fil
     }
   }
 
+  if (!missing(age.limits)) {
+    age.limits <- as.integer(age.limits)
+    if (anyNA(age.limits) || any(diff(age.limits) <= 0)) {
+      stop("'age.limits' must be an increasing integer vector of lower age limits.")
+    }
+  }
+
+  ## clean the survey
+  survey <- clean(survey)
+  ## check and get columns
+  columns <- suppressMessages(check(survey, ...))
+
   ## check if specific countries are requested (if a survey contains data from multiple countries)
   if (length(countries) > 0 && columns[["country"]] %in% colnames(survey$participants)) {
-    survey$participants[, paste(columns[["country"]]) :=
-      countrycode(
-        get(columns[["country"]]),
-        "country.name", "country.name"
-      )]
     if (all(nchar(countries) == 2)) {
       corrected_countries <- suppressWarnings(
         countrycode(countries, "iso2c", "country.name"))
@@ -119,12 +135,7 @@ contact_matrix <- function(survey, countries = NULL, survey.pop, age.limits, fil
     survey$participants[, paste(columns[["participant.age"]]) := NA_integer_]
   }
 
-  if (!(part_max.column %in% colnames(survey$participants)) &&
-    (columns[["participant.age"]] %in% colnames(survey$participants))
-  ) {
-    max.age <- max(survey$participants[, get(columns[["participant.age"]])], na.rm = TRUE) + 1
-  } else if (part_max.column %in% colnames(survey$participants) &&
-    (columns[["participant.age"]] %in% colnames(survey$participants))) {
+  if (part_max.column %in% colnames(survey$participants)) {
     max.age <- max(
       c(
         survey$participants[, get(columns[["participant.age"]])],
@@ -132,8 +143,10 @@ contact_matrix <- function(survey, countries = NULL, survey.pop, age.limits, fil
       ),
       na.rm = TRUE
     ) + 1
-  } else if (part_max.column %in% colnames(survey$participants)) {
-    max.age <- max(survey$participants[, get(columns[["participant.age"]])], na.rm = TRUE) + 1
+  } else {
+    max.age <- max(
+      survey$participants[, get(columns[["participant.age"]])], na.rm = TRUE
+    ) + 1
   }
 
   if (missing(age.limits)) {
@@ -142,10 +155,6 @@ contact_matrix <- function(survey, countries = NULL, survey.pop, age.limits, fil
     all.ages <- all.ages[!is.na(all.ages)]
     all.ages <- sort(all.ages)
     age.limits <- union(0, all.ages)
-  }
-  age.limits <- as.integer(age.limits)
-  if (anyNA(age.limits) || any(diff(age.limits) <= 0)) {
-    stop("'age.limits' must be an increasing integer vector of lower age limits.")
   }
 
   ## check if any filters have been requested
