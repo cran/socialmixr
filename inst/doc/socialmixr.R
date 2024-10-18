@@ -1,19 +1,12 @@
 ## ----setup, include = FALSE---------------------------------------------------
 library("knitr")
+library("socialmixr")
+library("ggplot2")
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 data.table::setDTthreads(1)
-
-## ----eval=FALSE---------------------------------------------------------------
-#  install.packages("socialmixr")
-
-## ----eval=FALSE---------------------------------------------------------------
-#  library("socialmixr")
-
-## ----echo=FALSE---------------------------------------------------------------
-suppressWarnings(library("socialmixr"))
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  ?contact_matrix
@@ -38,7 +31,7 @@ contact_matrix(polymod, countries = "United Kingdom", age.limits = c(0, 1, 5, 15
 survey_countries(polymod)
 
 ## -----------------------------------------------------------------------------
-cite(polymod)
+get_citation(polymod)
 
 ## -----------------------------------------------------------------------------
 m <- replicate(
@@ -160,7 +153,7 @@ survey_data["m_i * w_tilde"] <- survey_data$m_i * survey_data$w_tilde
 kable(survey_data)
 
 # remove the weighted number of contacts
-survey_data$"m_i * w_tilde" <- NULL
+survey_data$`m_i * w_tilde` <- NULL
 
 print(paste("weighted average number of contacts:", round(mean(survey_data$m_i * survey_data$w_tilde), digits = 2)))
 
@@ -262,9 +255,7 @@ survey_data$w_tilde[survey_data$w_tilde > 3] <- 3
 print(paste("weighted average number of contacts after truncation:", round(mean(survey_data$m_i * survey_data$w_tilde), digits = 2)))
 
 ## ----fig.width=4, fig.height=4------------------------------------------------
-library("reshape2")
-library("ggplot2")
-df <- melt(mr, varnames = c("age.group", "age.group.contact"), value.name = "contacts")
+df <- reshape2::melt(mr, varnames = c("age.group", "age.group.contact"), value.name = "contacts")
 ggplot(df, aes(x = age.group, y = age.group.contact, fill = contacts)) +
   theme(legend.position = "bottom") +
   geom_tile()

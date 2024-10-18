@@ -10,8 +10,6 @@ contact_matrix(
   survey.pop,
   age.limits,
   filter,
-  n = 1,
-  bootstrap,
   counts = FALSE,
   symmetric = FALSE,
   split = FALSE,
@@ -42,15 +40,11 @@ contact_matrix(
 
 \item{filter}{any filters to apply to the data, given as list of the form (column=filter_value) - only contacts that have 'filter_value' in 'column' will be considered. If multiple filters are given, they are all applied independently and in the sequence given.}
 
-\item{n}{deprecated; number of bootstrap samples to generate}
-
-\item{bootstrap}{deprecated; whether to bootstrap contact matrices}
-
 \item{counts}{whether to return counts (instead of means)}
 
 \item{symmetric}{whether to make matrix symmetric, such that \eqn{c_{ij}N_i = c_{ji}N_j}.}
 
-\item{split}{whether to split the number of contacts and assortativity}
+\item{split}{whether to split the contact matrix into the mean number of contacts, in each age group (split further into the product of the mean number of contacts across the whole population (\code{mean.contacts}), a normalisation constant (\code{normalisation}) and age-specific variation in contacts (\code{contacts})), multiplied with an assortativity matrix (\code{assortativity}) and a population multiplier (\code{demograpy}). For more detail on this, see the "Getting Started" vignette.}
 
 \item{sample.participants}{whether to sample participants randomly (with replacement); done multiple times this can be used to assess uncertainty in the generated contact matrices. See the "Bootstrapping" section in the vignette for how to do this..}
 
@@ -70,13 +64,13 @@ contact_matrix(
 
 \item{weight.threshold}{threshold value for the standardized weights before running an additional standardisation (default 'NA' = no cutoff)}
 
-\item{sample.all.age.groups}{what to do if bootstrapping fails to sample participants from one or more age groups; if FALSE (default), corresponding rows will be set to NA, if TRUE the sample will be discarded and a new one taken instead}
+\item{sample.all.age.groups}{what to do if sampling participants (with \code{sample.participants = TRUE}) fails to sample participants from one or more age groups; if FALSE (default), corresponding rows will be set to NA, if TRUE the sample will be discarded and a new one taken instead}
 
 \item{return.part.weights}{boolean to return the participant weights}
 
 \item{return.demography}{boolean to explicitly return demography data that corresponds to the survey data (default 'NA' = if demography data is requested by other function parameters)}
 
-\item{per.capita}{wheter to return a matrix with contact rates per capita (default is FALSE and not possible if 'counts=TRUE' or 'split=TRUE')}
+\item{per.capita}{whether to return a matrix with contact rates per capita (default is FALSE and not possible if 'counts=TRUE' or 'split=TRUE')}
 
 \item{...}{further arguments to pass to \code{\link[=get_survey]{get_survey()}}, \code{\link[=check]{check()}} and \code{\link[=pop_age]{pop_age()}} (especially column names)}
 }
@@ -84,7 +78,7 @@ contact_matrix(
 a contact matrix, and the underlying demography of the surveyed population
 }
 \description{
-Samples a contact survey using a bootstrap
+Samples a contact survey
 }
 \examples{
 data(polymod)
