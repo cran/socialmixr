@@ -1,7 +1,14 @@
 #' Download a survey from its Zenodo repository
 #'
-#' @description Downloads survey data
-#' @param survey a URL (see [list_surveys()])
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `download_survey()` has been deprecated in favour of
+#'   `contactsurveys::download_survey()`.
+#'
+#' `download_survey()` downloads survey data from Zenodo.
+#'
+#' @param survey a URL (see `contactsurveys::list_surveys()`)
 #' @param dir a directory to save the files to; if not given, will save to a
 #'   temporary directory
 #' @param sleep time to sleep between requests to avoid overloading the server
@@ -13,17 +20,27 @@
 #' @importFrom xml2 xml_text xml_find_first xml_find_all xml_attr
 #' @autoglobal
 #' @examples
+#' # we recommend using the contactsurveys package for download_survey()
 #' \dontrun{
-#' list_surveys()
+#' # if needed, discover surveys with:
+#' contactsurveys::list_surveys()
 #' peru_survey <- download_survey("https://doi.org/10.5281/zenodo.1095664")
+#' # -->
+#' peru_survey <- contactsurveys::download_survey(
+#'   "https://doi.org/10.5281/zenodo.1095664"
+#' )
 #' }
 #' @return a vector of filenames that can be used with [load_survey]
 #  @seealso load_survey
 #' @export
 download_survey <- function(survey, dir = NULL, sleep = 1) {
-
-  if (!is.character(survey) || length(survey) > 1) {
-    stop("'survey' must be a character of length 1")
+  lifecycle::deprecate_soft(
+    when = "0.5.0",
+    what = "download_survey()",
+    with = "contactsurveys::download_survey()"
+  )
+  if (!is.character(survey) || length(survey) != 1 || is.na(survey)) {
+    cli::cli_abort("{.arg survey} must be a single, non-NA character string.")
   }
 
   survey <- sub("^(https?:\\/\\/(dx\\.)?doi\\.org\\/|doi:)", "", survey)
@@ -32,13 +49,17 @@ download_survey <- function(survey, dir = NULL, sleep = 1) {
   is.url <- is.doi || grepl("^https?:\\/\\/", survey)
 
   if (!is.url) {
-    stop("'survey' is not a DOI or URL.")
+    cli::cli_abort("{.arg survey} is not a DOI or URL.")
   }
 
-  if (is.doi) url <- paste0("https://doi.org/", survey) else url <- survey
+  if (is.doi) {
+    survey_url <- paste0("https://doi.org/", survey)
+  } else {
+    survey_url <- survey
+  }
 
   temp_body <- GET(
-    url,
+    survey_url,
     config = config(
       followlocation = 1
     ),
@@ -47,11 +68,16 @@ download_survey <- function(survey, dir = NULL, sleep = 1) {
       packageVersion("socialmixr")
     ))
   )
-  if (status_code(temp_body) == 404) stop("DOI '", survey, "' not found")
+  if (status_code(temp_body) == 404) {
+    cli::cli_abort("DOI {.val {survey}} not found.")
+  }
   if (http_error(temp_body)) {
-    stop(
-      "Could not fetch the resource. ",
-      "This could an issue with the website server or your own connection."
+    cli::cli_abort(
+      c(
+        "Failed to fetch the requested resource",
+        "x" = "The website server returned an HTTP error", # nolint
+        "i" = "Check your connection or the server status" # nolint
+      )
     )
   }
 
@@ -74,61 +100,75 @@ download_survey <- function(survey, dir = NULL, sleep = 1) {
   reference[[ifelse(is.doi, "doi", "url")]] <- survey
 
   links <- xml_attr(
-    xml_find_all(parsed_body, "//link[@type=\"text/csv\"]"), "href"
+    xml_find_all(
+      parsed_body,
+      "//link[@type=\"text/csv\" and not(@rel=\"alternate\")]"
+    ),
+    "href"
   )
 
-  data <- data.table(url = links)
+  zenodo_links <- data.table(url = links)
   ## only download csv files
-  data[, file_name := tolower(basename(url))]
+  zenodo_links[, file_name := tolower(basename(url))]
 
-  if (anyDuplicated(data$file_name) > 0) {
-    warning(
-      "Zenodo repository contains files with names that only differ by case. ",
-      "This will cause unpredictable behaviour on case-insensitive file systems. ",
-      "Please contact the authors to get this fixed."
+  if (anyDuplicated(zenodo_links$file_name) > 0) {
+    cli::cli_warn(
+      c(
+        "Zenodo repository contains files with names that only differ by case.",
+        "!" = "This will cause unpredictable behaviour on case-insensitive \\
+        file systems.",
+        "i" = "Please contact the authors to get this fixed." # nolint
+      )
     )
-    data <- data[!duplicated(file_name)]
+    zenodo_links <- zenodo_links[!duplicated(file_name)]
   }
 
   if (is.null(dir)) {
     dir <- tempdir()
   }
 
-  message("Getting ", parsed_cite$name, ".")
+  cli::cli_inform("Getting {parsed_cite$name}.")
 
-  lcs <- find_common_prefix(data$file_name)
+  lcs <- find_common_prefix(zenodo_links$file_name)
   reference_file_path <- file.path(dir, paste0(lcs, "reference.json"))
   reference_json <- toJSON(reference)
   write(reference_json, reference_file_path)
 
-  files <- c(reference_file_path, vapply(seq_len(nrow(data)), function(i) {
-    url <- data[i, ]$url
-    temp <- file.path(dir, data[i, ]$file_name)
-    message("Downloading ", url)
-    Sys.sleep(sleep)
-    dl <- curl_download(url, temp)
-    return(temp)
-  }, ""))
+  files <- c(
+    reference_file_path,
+    vapply(
+      seq_len(nrow(zenodo_links)),
+      function(i) {
+        zenodo_url <- zenodo_links[i, ]$url
+        temp <- file.path(dir, zenodo_links[i, ]$file_name)
+        message("Downloading ", zenodo_url)
+        Sys.sleep(sleep)
+        dl <- curl_download(zenodo_url, temp)
+        temp
+      },
+      ""
+    )
+  )
 
   return(files)
 }
 
 find_common_prefix <- function(vec) {
-  # find initial longest common subequence of file names
+  # find initial longest common prefix of file names
   i <- 1
-  end <- FALSE
+  finish <- FALSE
   lcs <- ""
-  while (!end) {
+  while (!finish) {
     initial_bits <- vapply(vec, substr, start = 1, stop = i, "x")
     if (length(unique(initial_bits)) > 1) {
-      end <- TRUE
+      finish <- TRUE
     } else {
       lcs <- unique(initial_bits)
       i <- i + 1
     }
   }
 
-  return(lcs)
+  lcs
 }
 
 ##' Checks if a character string is a DOI

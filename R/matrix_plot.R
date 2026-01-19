@@ -24,12 +24,27 @@
 #' @examples
 #' \dontrun{
 #' data(polymod)
-#' mij <- contact_matrix(polymod, countries = "United Kingdom", age.limits = c(0, 18, 65))$matrix
+#' mij <- contact_matrix(polymod, countries = "United Kingdom", age_limits = c(0, 18, 65))$matrix
 #' matrix_plot(mij)
 #' }
 #' @author Lander Willem
-matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, num.colors = 50, main, xlab, ylab, legend.width, legend.mar, legend.shrink, cex.lab, cex.axis, cex.text, color.palette = heat.colors) {
-
+matrix_plot <- function(
+  mij,
+  min.legend = 0,
+  max.legend = NA,
+  num.digits = 2,
+  num.colors = 50,
+  main,
+  xlab,
+  ylab,
+  legend.width,
+  legend.mar,
+  legend.shrink,
+  cex.lab,
+  cex.axis,
+  cex.text,
+  color.palette = heat.colors
+) {
   # check function arguments
   xlab <- ifelse(!missing(xlab), xlab, "Age group (year)")
   ylab <- ifelse(!missing(ylab), ylab, "Contact age group (year)")
@@ -53,13 +68,14 @@ matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, nu
   breaks <- seq(zlim[1], zlim[2], length = num.colors + 1)
   midpoints <- matrix(
     breaks[-length(breaks)] + diff(breaks) / 2,
-    nrow = 1, ncol = length(breaks) - 1
+    nrow = 1,
+    ncol = length(breaks) - 1
   )
 
   # get plot region for matrix and legend based on current graphical parameters
   # note: based on layout from fields::imagePlot
   char.size <- par()$cin[1] / par()$din[1] # get text character size
-  offset <- char.size * par()$mar[4] # space between legend and main plot
+  plot_offset <- char.size * par()$mar[4] # space between legend and main plot
 
   # set legends' plot region
   legend_plot_region <- par()$plt
@@ -73,12 +89,18 @@ matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, nu
   legend_plot_region[3] <- legend_plot_region[3] + pr
 
   # set main matrix' plot region
-  main_plot_region    <- par()$plt
-  main_plot_region[2] <- min(main_plot_region[2], legend_plot_region[1] - offset)
+  main_plot_region <- par()$plt
+  main_plot_region[2] <- min(
+    main_plot_region[2],
+    legend_plot_region[1] - plot_offset
+  )
 
   # defensive check for main and legends' plot region
   dp <- legend_plot_region[2] - legend_plot_region[1]
-  legend_plot_region[1] <- min(main_plot_region[2] + offset, legend_plot_region[1])
+  legend_plot_region[1] <- min(
+    main_plot_region[2] + plot_offset,
+    legend_plot_region[1]
+  )
   legend_plot_region[2] <- legend_plot_region[1] + dp
 
   # store old graphical parameters, and initiate the ones for the main plot
@@ -86,20 +108,35 @@ matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, nu
   par(plt = main_plot_region)
 
   # add image plot
-  image(mij,
-        xlab = xlab,
-        ylab = ylab,
-        main = main,
-        cex.lab = cex.lab,
-        breaks = breaks,
-        col = redc,
-        xaxt = "n",
-        yaxt = "n")
+  image(
+    mij,
+    xlab = xlab,
+    ylab = ylab,
+    main = main,
+    cex.lab = cex.lab,
+    breaks = breaks,
+    col = redc,
+    xaxt = "n",
+    yaxt = "n"
+  )
 
   # add axis labels
   plt_ticks <- seq(0, 1, length = nrow(mij))
-  axis(2, at = plt_ticks, labels = c(colnames(mij)), cex.axis = cex.axis, tick = FALSE, las = 1)
-  axis(1, at = plt_ticks, labels = c(colnames(mij)), cex.axis = cex.axis, tick = FALSE)
+  axis(
+    2,
+    at = plt_ticks,
+    labels = c(colnames(mij)),
+    cex.axis = cex.axis,
+    tick = FALSE,
+    las = 1
+  )
+  axis(
+    1,
+    at = plt_ticks,
+    labels = c(colnames(mij)),
+    cex.axis = cex.axis,
+    tick = FALSE
+  )
 
   # add numeric values if num.digits != NA and cex.text > 0
   if (!is.na(num.digits) && !is.na(cex.text) && cex.text > 0) {
@@ -119,12 +156,19 @@ matrix_plot <- function(mij, min.legend = 0, max.legend = NA, num.digits = 2, nu
   par(new = TRUE, pty = "m", plt = legend_plot_region, err = -1)
 
   # include legend bar with axis
-  image(x = 1:2, y = breaks, z = midpoints,
-        xaxt = "n", yaxt = "n", xlab = "",
-        ylab = "", col = redc,
-        breaks = breaks)
+  image(
+    x = 1:2,
+    y = breaks,
+    z = midpoints,
+    xaxt = "n",
+    yaxt = "n",
+    xlab = "",
+    ylab = "",
+    col = redc,
+    breaks = breaks
+  )
   axis(side = 4, mgp = c(3, 1, 0), las = 2)
 
   # restore original graphical parameters
-  par(old.par)
+  par(plt = old.par$plt, err = old.par$err)
 }

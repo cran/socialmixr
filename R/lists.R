@@ -1,15 +1,30 @@
 #' List all surveys available for download
 #'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `list_surveys()` has been deprecated in favour of
+#'   `contactsurveys::list_surveys()`.
+#'
 #' @return character vector of surveys
 #' @inheritParams get_survey
 #' @examples
+#' # we recommend using the contactsurveys package now for listing surveys.
 #' \dontrun{
-#' list_surveys()
+#' contactsurveys::list_surveys()
 #' }
 #' @export
 list_surveys <- function(clear_cache = FALSE) {
-  if (!("list_surveys" %in% names(.socialmixr.env$cached_functions)) ||
-      clear_cache) {
+  lifecycle::deprecate_soft(
+    when = "0.5.0",
+    what = "list_surveys()",
+    with = "contactsurveys::list_surveys()"
+  )
+
+  if (
+    !("list_surveys" %in% names(.socialmixr.env$cached_functions)) ||
+      clear_cache
+  ) {
     .socialmixr.env$cached_functions$list_surveys <- memoise(.list_surveys)
   }
   .socialmixr.env$cached_functions$list_surveys()
@@ -19,23 +34,40 @@ list_surveys <- function(clear_cache = FALSE) {
 #' @importFrom oai list_records
 #' @keywords internal
 .list_surveys <- function() {
-  record_list <-
-    data.table(list_records("https://zenodo.org/oai2d",
+  record_list <- tryCatch(
+    data.table(list_records(
+      "https://zenodo.org/oai2d",
       metadataPrefix = "oai_datacite",
       set = "user-social_contact_data"
-    ))
+    )),
+    error = function(e) {
+      cli::cli_abort(
+        message = c(
+          "Failed to retrieve survey list from Zenodo OAI-PMH.",
+          "Please retry later",
+          "Original error: {conditionMessage(e)}"
+        )
+      )
+    }
+  )
   ## find common DOI for different versions, i.e. the "relation" that is a DOI
   relations <- grep("^relation(\\.|$)", colnames(record_list), value = TRUE)
   DOIs <- apply(
-    record_list, 1, function(x) {
+    record_list,
+    1,
+    function(x) {
       min(grep("^https://doi.org/.*zenodo", x[relations], value = TRUE))
     }
   )
   record_list <- record_list[, common_doi := DOIs]
-  record_list <- record_list[, url := sub("doi:", "https://doi.org/", common_doi, fixed = TRUE)]
+  record_list <- record_list[,
+    url := sub("doi:", "https://doi.org/", common_doi, fixed = TRUE)
+  ]
   ## get number within version DOI, this is expected to be ascending by version
   record_list <-
-    record_list[, doi.nb := as.integer(sub("^.*zenodo\\.org:", "", identifier.1))]
+    record_list[,
+      doi.nb := as.integer(sub("^.*zenodo\\.org:", "", identifier.1))
+    ]
   ## save date at which first entered
   record_list <- record_list[, date := min(date), by = common_doi]
   ## order by DOI number and extract newest version
@@ -43,10 +75,21 @@ list_surveys <- function(clear_cache = FALSE) {
   record_list <- record_list[, .SD[1], by = common_doi]
   ## order by date
   setkey(record_list, date)
-  return(record_list[, list(date_added = date, title, creator, url = identifier.2)])
+  record_list[, list(
+    date_added = date,
+    title,
+    creator,
+    url = identifier.2
+  )]
 }
 
 #' List all countries contained in a survey
+#'
+#' `r lifecycle::badge("deprecated")`
+#'
+#' `survey_countries()` has been deprecated in favour of using
+#'   `contactsurveys::download_survey()`, and [load_survey()], and then
+#'   exploring the country column yourself.
 #'
 #' @param country.column column in the survey indicating the country
 #' @param ... further arguments for [get_survey()]
@@ -55,8 +98,26 @@ list_surveys <- function(clear_cache = FALSE) {
 #' @examples
 #' data(polymod)
 #' survey_countries(polymod)
+#' ## --> we now recommend
+#' \dontrun{
+#' doi_peru <- "10.5281/zenodo.1095664" # nolint
+#' # download the data with the contactsurveys package
+#' peru_survey <- contactsurveys::download_survey(doi_peru)
+#' # load the survey with socialmixr
+#' peru_data <- socialmixr::load_survey(peru_survey)
+#' # find the unique country - assuming your data has a "country" column:
+#' unique(peru_data$participants$country)
+#' }
 #' @export
 survey_countries <- function(survey, country.column = "country", ...) {
+  lifecycle::deprecate_soft(
+    when = "0.5.0",
+    what = "survey_countries()",
+    with = "contactsurveys::download_survey()",
+    details = "We recommend using contactsurveys::download_survey() to \\
+    download your surveys, and then you can load them with \\
+    socialmixr::load_survey() and explore which countries are in the data."
+  )
   survey <- get_survey(survey, ...)
   return(as.character(unique(survey[["participants"]][[country.column]])))
 }
@@ -84,6 +145,5 @@ wpp_countries <- function() {
       "un",
       "country.name"
     ))
-  found_countries <- found_countries[!is.na(found_countries)]
-  return(found_countries)
+  found_countries[!is.na(found_countries)]
 }
