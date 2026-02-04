@@ -1,3 +1,17 @@
+# socialmixr 0.5.1
+
+This is a patch release with a bug fix and documentation updates.
+
+* `load_survey()` no longer fails when merging contact files that lack a
+  `cont_id` column (#278).
+
+* The vignette now points to the
+ [contactsurveys](https://cran.r-project.org/package=contactsurveys) package
+  for downloading surveys from Zenodo, and no longer uses deprecated functions
+  (#269).
+
+* Added Nicholas Tierney (@njtierney) as package author (#277).
+
 # socialmixr 0.5.0
 
 This release focuses on improved modularity and flexibility for contact matrix
@@ -6,10 +20,6 @@ assignment and population data retrieval, more intuitive handling of age
 limits, and the beginning of a transition to the
 [contactsurveys](https://github.com/epiforecasts/contactsurveys) package for
 survey downloads.
-
-We thank Nicholas Tierney (@njtierney), Lander Willem (@lwillem), Hugo Gruson
-(@Bisaloo), Lloyd Chapman (@LloydChapman), James Azam (@jamesmbaazam), and
-Abdoelnaser Degoot (@Degoot-AM) for their contributions to this release.
 
 ## Breaking changes
 

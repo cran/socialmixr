@@ -1,10 +1,12 @@
 Package: socialmixr
 Title: Social Mixing Matrices for Infectious Disease Modelling
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: c(
     person("Sebastian", "Funk", , "sebastian.funk@lshtm.ac.uk", role = c("aut", "cre")),
     person("Lander", "Willem", role = "aut"),
     person("Hugo", "Gruson", role = "aut"),
+    person("Nicholas", "Tierney", , "nicholas.tierney@gmail.com", role = "aut",
+           comment = c(ORCID = "0000-0003-1460-8722")),
     person("Maria", "Bekker-Nielsen Dunbar", role = "ctb"),
     person("Carl A. B.", "Pearson", role = "ctb"),
     person("Sam", "Clifford", , "sj.clifford@gmail.com", role = "ctb"),
@@ -22,8 +24,8 @@ Depends: R (>= 3.5.0)
 Imports: checkmate, countrycode, curl, data.table, grDevices, httr,
         jsonlite, lifecycle, lubridate, memoise, purrr, oai, wpp2017,
         xml2, cli, rlang, methods
-Suggests: ggplot2, here, knitr, quarto, reshape2, rmarkdown,
-        roxyglobals (>= 1.0.0), testthat, withr
+Suggests: contactsurveys, ggplot2, here, knitr, quarto, reshape2,
+        rmarkdown, roxyglobals (>= 1.0.0), testthat, withr
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
@@ -33,10 +35,11 @@ URL: https://github.com/epiforecasts/socialmixr,
         https://epiforecasts.io/socialmixr/
 BugReports: https://github.com/epiforecasts/socialmixr/issues
 Config/testthat/edition: 3
-Packaged: 2026-01-19 16:04:57 UTC; eidesfun
+Packaged: 2026-02-04 15:44:37 UTC; eidesfun
 Author: Sebastian Funk [aut, cre],
   Lander Willem [aut],
   Hugo Gruson [aut],
+  Nicholas Tierney [aut] (ORCID: <https://orcid.org/0000-0003-1460-8722>),
   Maria Bekker-Nielsen Dunbar [ctb],
   Carl A. B. Pearson [ctb],
   Sam Clifford [ctb],
@@ -47,4 +50,4 @@ Author: Sebastian Funk [aut, cre],
   Lloyd Chapman [ctb]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
 Repository: CRAN
-Date/Publication: 2026-01-19 16:30:02 UTC
+Date/Publication: 2026-02-04 16:00:02 UTC

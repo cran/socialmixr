@@ -1,7 +1,7 @@
-ba5abd7b4b4d75cc666867f9db477b1a *DESCRIPTION
+815fa34d57cb26129f312b1e12531158 *DESCRIPTION
 b50451d6f89e4b1c9c7f8c4e51ebf018 *LICENSE
 b2010b9523b97c14ccb5e3dc066eeef5 *NAMESPACE
-be0161995251b218ba67f3cdfa1db8b9 *NEWS.md
+f76ef403a1d94d8ae620127c3419244c *NEWS.md
 971f323b0b6edf97d75a71361954ba3a *R/as_contact_survey.R
 873744a23a2fc31b3953ea70f033accc *R/assign-age-groups.R
 e61c7e6cfcc74a829f4ca557e7977817 *R/check.R
@@ -17,7 +17,7 @@ cc9f0d8670622a2355bfb3b0291d714d *R/get_survey.R
 533c2eea04e35e1797558806077d7038 *R/globals.R
 97638b5e0133535fbfd98fdfe209b89b *R/limits_to_agegroups.R
 9cbb5f85f53a674bdd4bce7faf24e3bf *R/lists.R
-8f1bd7cb0052a94385a7e94d0522125b *R/load-survey-utils.R
+a746a4001d96296ad2565b91d5ba00d6 *R/load-survey-utils.R
 234a7e9653ea753f5933cadbc4996315 *R/load_survey.R
 576fb97f193e16fa282b996787c142b8 *R/matrix_plot.R
 a76cc303fa2fbfcba35ef946a44ce517 *R/new_contact_survey.R
@@ -28,16 +28,15 @@ a76cc303fa2fbfcba35ef946a44ce517 *R/new_contact_survey.R
 0ecc61bcd2a0dec1783e649a0550add4 *R/survey.R
 0362bc7ac3b0c1d0526afaea8115cd6b *R/utils.R
 1b60aa1305b095c6c31bf1606dbb6c52 *R/wpp_age.R
-7a39f3968298d14a72a6c646d3b78c00 *README.md
+64e780e6d37b09c5ba36eb7bda695ab6 *README.md
 76e123f5dcc8dee07678412adc0a2a84 *build/partial.rdb
 6f3828a47c55fab76930443c1134e2df *build/vignette.rds
 2c10052c5d929a71546c0ef92518c997 *data/polymod.rda
-e7e2a5f28801b203fbd62ac4ef6b737d *inst/blog-draft-0.5.0.md
 4cc3a0524ffec8e1d4ba1dc7a2e0e0f4 *inst/dev/check_all_surveys.r
 abaf640926adb2f01110218d651ac831 *inst/dev/dl_all_surveys.r
-2c793decf8b2e8bfe7bcfd784b0f42ee *inst/doc/socialmixr.R
-ed509de4abdef7892c150878867dea17 *inst/doc/socialmixr.Rmd
-3958c75a8ecd5d911c15c39e42cde0e2 *inst/doc/socialmixr.html
+94a987fb0afadaa4d6c7379daac6a5b7 *inst/doc/socialmixr.R
+2d535635b82d58e404903bc7a9aaa52f *inst/doc/socialmixr.Rmd
+d6a9f824c787fe46a28d73b227b3b1d2 *inst/doc/socialmixr.html
 56a9023151b5328edd9238a43814bcbb *man/add_age.Rd
 e6f3c4971ba810b654e2d9d128ec66af *man/as_contact_survey.Rd
 e68950726f987658b1446f54d4e41f42 *man/assign_age_groups.Rd
@@ -97,5 +96,5 @@ bffff0ce558a372c721d5625279bac8e *tests/testthat/test-plot.r
 75134b9e9b66727339036eac24e72391 *tests/testthat/test-survey-country-population.R
 406451fbd7b0b8ec726ac31e33ded289 *tests/testthat/test-surveys.r
 cccc7c6c79b9274ab4137906faef47f7 *vignettes/intro.qmd
-ed509de4abdef7892c150878867dea17 *vignettes/socialmixr.Rmd
+2d535635b82d58e404903bc7a9aaa52f *vignettes/socialmixr.Rmd
 e362c016ff71c78cf6332df9a8561bd5 *vignettes/socialmixr.bib
