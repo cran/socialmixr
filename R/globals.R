@@ -6,6 +6,11 @@ utils::globalVariables(c(
   "..age.unit", # <clean.contact_survey>
   "..high", # <clean.contact_survey>
   "..low", # <clean.contact_survey>
+  "weight", # <compute_matrix>
+  "sampled.weight", # <compute_matrix>
+  "age", # <contact_age_distribution>
+  "proportion", # <contact_age_distribution>
+  "N", # <contact_age_distribution>
   "cnt_age", # <drop_ages_below_age_limit>
   "cnt_age", # <drop_missing_contact_ages>
   "part_age_exact", # <max_participant_age>
@@ -26,7 +31,6 @@ utils::globalVariables(c(
   "country", # <get_survey_countries>
   "population", # <survey_pop_from_countries>
   "lower.age.limit", # <survey_pop_from_countries>
-  "part_age", # <survey_pop_from_countries>
   "lower.age.limit", # <add_survey_upper_age_limit>
   "population", # <add_survey_upper_age_limit>
   "upper.age.limit", # <adjust_survey_age_groups>
@@ -42,10 +46,7 @@ utils::globalVariables(c(
   "weight.age", # <weight_by_age>
   "weight", # <weight_by_age>
   "weight", # <weigh_by_user_defined>
-  "weight", # <truncate_renormalise_weights>
-  "age.group", # <truncate_renormalise_weights>
-  "weight", # <participant_weights>
-  "age.group", # <participant_weights>
+  "weight", # <normalise_weights>
   "part_id", # <merge_participants_contacts>
   "cnt_age", # <sample_present_age>
   "age.group", # <sample_present_age>
@@ -74,12 +75,13 @@ utils::globalVariables(c(
   "proportion", # <return_participant_weights>
   "participants", # <return_participant_weights>
   "weight", # <contact_matrix>
-  "age.group", # <contact_matrix>
+  "is.weekday", # <contact_matrix>
+  "dayofweek", # <contact_matrix>
   "cnt_age", # <contact_matrix>
   "lower.age.limit", # <contact_matrix>
+  "age.group", # <contact_matrix>
   "population", # <contact_matrix>
   "part_age", # <contact_matrix>
-  "is.weekday", # <contact_matrix>
   "proportion", # <contact_matrix>
   "participants", # <contact_matrix>
   "file_name", # <download_survey>
@@ -89,12 +91,15 @@ utils::globalVariables(c(
   "title", # <.list_surveys>
   "creator", # <.list_surveys>
   "identifier.2", # <.list_surveys>
-  "..merge_id", # <try_merge_additional_files>
-  "..main_id", # <try_merge_additional_files>
   "..original.lower.age.limit", # <pop_age>
   "..segment", # <pop_age>
   "..upper.age.limit", # <pop_age>
+  "part_id", # <[.contact_survey>
   "population", # <survey_country_population>
+  "weight", # <weigh>
+  "weight", # <weigh_direct>
+  "weight", # <weigh_grouped>
+  "weight", # <weigh_named>
   "sex", # <wpp_age>
   "country", # <wpp_age>
   "name", # <wpp_age>

@@ -2,7 +2,8 @@
 % Please edit documentation in R/wpp_age.R
 \name{wpp_age}
 \alias{wpp_age}
-\title{Get age-specific population data according to the World Population Prospects 2017 edition}
+\title{Get age-specific population data according to the World
+Population Prospects 2017 edition}
 \usage{
 wpp_age(countries, years)
 }
@@ -15,10 +16,27 @@ wpp_age(countries, years)
 data frame of age-specific population data
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+This function is deprecated in favour of passing population data directly
+to \code{\link[=contact_matrix]{contact_matrix()}} via the \code{survey_pop} argument. Additionally, the
+underlying \code{wpp2017} data is outdated. For more recent population data,
+use the \code{wpp2024} package from GitHub.
+}
+\details{
 This uses data from the \code{wpp2017} package but combines male and female,
-and converts age groups to lower age limits. If the requested year is not present
-in the historical data, wpp projections are used.
+and converts age groups to lower age limits. If the requested
+year is not present in the historical data, WPP projections
+are used.
 }
 \examples{
 wpp_age("Italy", c(1990, 2000))
+
+# For more recent data, use wpp2024 from GitHub:
+# remotes::install_github("PPgp/wpp2024")
+# library(wpp2024)
+# data(popAge1dt)
+# uk_pop <- popAge1dt[name == "United Kingdom" & year == 2020,
+#                     .(lower.age.limit = age, population = pop * 1000)]
+# contact_matrix(polymod, countries = "United Kingdom", survey_pop = uk_pop)
 }

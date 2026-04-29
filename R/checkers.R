@@ -59,9 +59,7 @@ check_any_missing_countries <- function(
     cli::cli_abort(
       message = c(
         "Could not find population data for: {.val {missing_countries}}.",
-        # nolint start
-        "i" = "Use {.fn wpp_countries} to get a list of country names."
-        # nolint end
+        i = "Pass population data directly via the {.arg survey_pop} argument."
       ),
       call = call
     )
@@ -137,6 +135,7 @@ check_na_in_weighted_matrix <- function(
 ) {
   if (na_in_weighted_matrix(weighted_matrix) && split) {
     ## construct a warning in case there are NAs
+    # nolint next: object_usage_linter. Used in cli interpolation.
     warning_suggestion <- build_na_warning(weighted_matrix)
     cli::cli_warn(
       message = c(

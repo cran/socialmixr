@@ -1,6 +1,6 @@
 Package: socialmixr
 Title: Social Mixing Matrices for Infectious Disease Modelling
-Version: 0.5.1
+Version: 0.6.0
 Authors@R: c(
     person("Sebastian", "Funk", , "sebastian.funk@lshtm.ac.uk", role = c("aut", "cre")),
     person("Lander", "Willem", role = "aut"),
@@ -16,11 +16,11 @@ Authors@R: c(
     person("Pietro", "Coletti", role = c("col", "dtm")),
     person("Lloyd", "Chapman", , "l.chapman4@lancaster.ac.uk", role = "ctb")
   )
-Description: Provides methods for sampling contact matrices from diary
-    data for use in infectious disease modelling, as discussed in Mossong
-    et al. (2008) <doi:10.1371/journal.pmed.0050074>.
+Description: Methods for sampling contact matrices from diary data for
+    use in infectious disease modelling, as discussed in Mossong et al.
+    (2008) <doi:10.1371/journal.pmed.0050074>.
 License: MIT + file LICENSE
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.1.0)
 Imports: checkmate, countrycode, curl, data.table, grDevices, httr,
         jsonlite, lifecycle, lubridate, memoise, purrr, oai, wpp2017,
         xml2, cli, rlang, methods
@@ -35,7 +35,7 @@ URL: https://github.com/epiforecasts/socialmixr,
         https://epiforecasts.io/socialmixr/
 BugReports: https://github.com/epiforecasts/socialmixr/issues
 Config/testthat/edition: 3
-Packaged: 2026-02-04 15:44:37 UTC; eidesfun
+Packaged: 2026-04-28 17:43:28 UTC; sebfunk
 Author: Sebastian Funk [aut, cre],
   Lander Willem [aut],
   Hugo Gruson [aut],
@@ -50,4 +50,4 @@ Author: Sebastian Funk [aut, cre],
   Lloyd Chapman [ctb]
 Maintainer: Sebastian Funk <sebastian.funk@lshtm.ac.uk>
 Repository: CRAN
-Date/Publication: 2026-02-04 16:00:02 UTC
+Date/Publication: 2026-04-29 06:40:18 UTC

@@ -1,5 +1,9 @@
 set.seed(123)
 
+withr::local_options(
+  lifecycle_verbosity = "quiet",
+  .local_envir = teardown_env()
+)
 polymod2 <- get_survey(polymod)
 polymod3 <- get_survey(polymod)
 polymod4 <- get_survey(polymod)
@@ -28,10 +32,10 @@ polymod8$contacts$cnt_age_est_max <- NA_real_
 polymod8$contacts[polymod$contacts$part_id == 10, "cnt_age_exact"] <- 10
 polymod8$contacts[polymod$contacts$part_id == 20, "cnt_age_exact"] <- 20
 polymod9$participants$part_age_est_min <- 1
-polymod9$participants$part_age_est_max <- 15
+polymod9$participants$part_age_est_max <- 14
 polymod9$participants$part_age_exact <- NULL
 polymod9$participants$part_age_est_min <- 1
-polymod9$participants$part_age_est_max <- 15
+polymod9$participants$part_age_est_max <- 14
 nn <- nrow(polymod9$participants)
 polymod9$participants$part_age_exact <- ifelse(runif(nn) > 0.7, 20, NA)
 polymod10$participants$added_weight <-
@@ -222,7 +226,7 @@ test_that("error is thrown if invalid age limits are passed", {
   )
 })
 
-test_that("error is thrown if there are no participants after selecting the country", {
+test_that("error if no participants after selecting the country", {
   expect_snapshot(
     error = TRUE,
     cran = FALSE,
@@ -234,7 +238,7 @@ test_that("error is thrown if there are no participants after selecting the coun
   )
 })
 
-test_that("warning is thrown if population needed but no 'year' column present", {
+test_that("warning if population needed but no 'year' column", {
   expect_snapshot_warning(
     contact_matrix(
       survey = polymod3,
@@ -252,7 +256,7 @@ test_that("warning is thrown if population needed but no 'year' column present",
   )
 })
 
-test_that("warning is thrown if day of week is asked to be weighed but not present", {
+test_that("warning if day of week weigh requested but not present", {
   expect_snapshot_warning(
     contact_matrix(survey = polymod3, weigh_dayofweek = TRUE)
   )
@@ -386,7 +390,7 @@ test_that("nonsensical operations are warned about", {
   )
 })
 
-test_that("warning is thrown if it is assumed that the survey is representative", {
+test_that("warning if survey is assumed to be representative", {
   expect_snapshot_warning(
     contact_matrix(
       survey = polymod4,
@@ -397,7 +401,7 @@ test_that("warning is thrown if it is assumed that the survey is representative"
 })
 
 
-test_that("Taking mean of estimated contact's age give na when mean is not in an age limit ", {
+test_that("mean of estimated contact age gives NA outside limits", {
   cm <- contact_matrix(survey = polymod9, age_limits = c(0, 5, 10, 15, 20))
   expect_true(is.na(rowSums(cm$matrix)[1]))
   expect_false(is.na(rowSums(cm$matrix)[2]))
@@ -406,7 +410,7 @@ test_that("Taking mean of estimated contact's age give na when mean is not in an
   expect_false(is.na(rowSums(cm$matrix)[5]))
 })
 
-test_that("Taking sample of estimated participant's give na when no overlap with the age limits ", {
+test_that("sample of estimated participant age gives NA if no overlap", {
   cm <- contact_matrix(
     survey = polymod9,
     age_limits = c(0, 5, 10, 15, 20),
@@ -463,7 +467,7 @@ test_that("The order in which weights are applied do not change the results", {
   )
 })
 
-test_that("The day.of.week weight does not affect single-year age groups that reported only during weekdays", {
+test_that("day.of.week weight does not affect weekday-only groups", {
   matrix_unweighted <- suppressMessages(suppressWarnings(
     contact_matrix(
       polymod11,
@@ -500,7 +504,7 @@ test_that("The day.of.week weight does not affect single-year age groups that re
   )
 })
 
-test_that("The day.of.week weight does not affect an age group that reported only during weekdays", {
+test_that("day.of.week weight does not affect weekday-only group", {
   matrix_unweighted <- contact_matrix(
     polymod11,
     age_limits = c(0, 3),
@@ -522,7 +526,7 @@ test_that("The day.of.week weight does not affect an age group that reported onl
     rowSums(matrix_unweighted$matrix)[1] != rowSums(matrix_weighted$matrix)[1]
   )
 
-  # age group 2 => contains only data on weekdays => should not be impacted by weights
+  # age group 2 => only weekday data => not impacted by weights
   expect_equal(
     num_contacts_unweighted[2],
     num_contacts_weighted[2],
@@ -530,7 +534,7 @@ test_that("The day.of.week weight does not affect an age group that reported onl
   )
 })
 
-test_that("The day.of.week weight should change the result with only one age group", {
+test_that("day.of.week weight changes result with one age group", {
   matrix_unweighted <- contact_matrix(
     polymod11,
     age_limits = 0,
@@ -547,7 +551,7 @@ test_that("The day.of.week weight should change the result with only one age gro
   expect_false(matrix_unweighted$matrix == matrix_weighted$matrix)
 })
 
-test_that("The age-specific weight should change the results for multi-year age groups", {
+test_that("age-specific weight changes multi-year age groups", {
   suppressWarnings({
     matrix_unweighted <- contact_matrix(
       polymod11,
@@ -570,7 +574,7 @@ test_that("The age-specific weight should change the results for multi-year age 
   expect_identical(matrix_unweighted$matrix[2, ], matrix_weighted$matrix[2, ])
 })
 
-test_that("The age-specific weight should not change the results with single year age groups", {
+test_that("age-specific weight unchanged for single year groups", {
   expect_equal(
     suppressWarnings(
       contact_matrix(
@@ -592,7 +596,7 @@ test_that("The age-specific weight should not change the results with single yea
   )
 })
 
-test_that("All requested age groups are included even if no participants in some groups", {
+test_that("all age groups included even if no participants", {
   # Age groups beyond max participant age should still be included
   cm <- suppressWarnings(contact_matrix(
     polymod,
@@ -602,9 +606,9 @@ test_that("All requested age groups are included even if no participants in some
 
   # All 4 age groups should be present in participants
   expect_identical(nrow(cm$participants), 4L)
-  expect_true("100+" %in% cm$participants$age.group)
-  # The 100+ group should have 0 participants
-  expect_identical(cm$participants[age.group == "100+", participants], 0L)
+  expect_true("[100,Inf)" %in% cm$participants$age.group)
+  # The [100,Inf) group should have 0 participants
+  expect_identical(cm$participants[age.group == "[100,Inf)", participants], 0L)
 })
 
 test_that("Demography age groups are subset of participant age groups", {
@@ -768,7 +772,8 @@ test_that("The return.part.weights option", {
         1
     ))
 
-    # with dayofweek weights activated, we should receive 4 weights, different from 1
+    # with dayofweek weights activated, we should receive 6 weights
+    # (2 age groups × 3 day types: weekday, weekend, NA dayofweek)
     expect_length(
       contact_matrix(
         survey = polymod,
@@ -776,7 +781,7 @@ test_that("The return.part.weights option", {
         weigh_dayofweek = TRUE,
         return_part_weights = TRUE
       )$participants.weights$weight,
-      4
+      6
     )
     expect_false(all(
       contact_matrix(
@@ -880,24 +885,15 @@ test_that("The weights with threshold", {
     # check threshold values (include 2.5% margin due to the standardisation)
     expect_gt(max(weights.nothreshold$weight), 3 * 1.025)
     expect_lt(max(weights.threshold3$weight), 3 * 1.025) #
-    expect_gt(max(weights.threshold50$weight), 3 * 1.02) # include small margin due to the standardisation
-    expect_lt(max(weights.threshold50$weight), 50 * 1.025) # include small margin due to the standardisation
+    # include small margin due to the standardisation
+    expect_gt(max(weights.threshold50$weight), 3 * 1.02)
+    # include small margin due to the standardisation
+    expect_lt(max(weights.threshold50$weight), 50 * 1.025)
   })
 })
 
-test_that("Country names in Zenodo datasets and the wpp package are aligned (e.g. Viet Nam vs. Vietnam)", {
-  skip_if_offline("zenodo.org")
-  skip_on_cran()
-  skip_on_ci()
-  vietnam1 <- get_survey("https://doi.org/10.5281/zenodo.1289473")
-  expect_length(
-    suppressWarnings(contact_matrix(vietnam1, symmetric = FALSE)),
-    2
-  ) # no demography data used
-  expect_length(suppressWarnings(contact_matrix(vietnam1, symmetric = TRUE)), 3) # country is recognized and demography data found
-})
 
-test_that("Participants that report contacts with missing age are removed, sampled, or ignored", {
+test_that("participants with missing contact age are handled", {
   num.part <- nrow(polymod$participants)
   num.part.missing.age <- sum(is.na(polymod$participants$part_age))
 
@@ -914,7 +910,8 @@ test_that("Participants that report contacts with missing age are removed, sampl
     num.part
   )
 
-  # remove missing participant ages ==>> get original sample size - num.part.missing.age
+  # remove missing participant ages
+  # => get original sample size - num.part.missing.age
   expect_identical(
     sum(
       contact_matrix(
@@ -927,7 +924,8 @@ test_that("Participants that report contacts with missing age are removed, sampl
     num.part - num.part.missing.age
   )
 
-  # remove missing participant ages ==>> get original sample size - num.part.missing.age
+  # remove missing participant ages
+  # => get original sample size - num.part.missing.age
   expect_lt(
     sum(
       contact_matrix(
@@ -987,7 +985,7 @@ test_that("Participants that report contacts with missing age are removed, sampl
 })
 
 
-test_that("User-defined reference populations with open ended age groups are handled correctly", {
+test_that("user-defined reference populations with open age groups", {
   suppressWarnings({
     survey.pop <- data.frame(
       lower.age.limit = c(0, 4, 15),
@@ -1140,18 +1138,26 @@ test_that("Contact matrices per capita are also generated when bootstrapping", {
 })
 
 
-test_that("Symmetric contact matrices with large normalisation weights throw a warning", {
+test_that("symmetric matrices with large norm weights warn", {
   expect_snapshot_warning(
     cran = FALSE,
-    contact_matrix(survey = polymod, age_limits = c(0, 90), symmetric = TRUE)
+    contact_matrix(
+      survey = polymod,
+      age_limits = c(0, 90),
+      symmetric = TRUE
+    )
   )
   expect_warning(
-    contact_matrix(survey = polymod, age_limits = c(0, 90), symmetric = TRUE),
+    contact_matrix(
+      survey = polymod,
+      age_limits = c(0, 90),
+      symmetric = TRUE
+    ),
     "artefacts after making the matrix symmetric"
   )
 })
 
-test_that("Contacts with an age below the age limits are excluded regardless of the missing.contact.age setting", {
+test_that("contacts below age limits excluded regardless of setting", {
   expect_identical(
     ncol(
       contact_matrix(
@@ -1195,6 +1201,7 @@ test_that("Contacts with an age below the age limits are excluded regardless of 
 })
 
 test_that("sample.all.age.groups errors when age group has no participants", {
+  withr::local_options(lifecycle_verbosity = "quiet")
   # Create a survey with no participants in a specific age range
   polymod_limited <- get_survey(polymod)
   # Keep only participants aged 20+

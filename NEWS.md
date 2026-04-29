@@ -1,3 +1,124 @@
+# socialmixr 0.6.0
+
+This release adds a pipeline of composable functions for building contact
+matrices (`[`, `assign_age_groups()`, `weigh()`, `compute_matrix()`,
+`symmetrise()`, `split_matrix()`, `per_capita()`) and a `contact_matrix` S3
+class. The vignette and README are rewritten around the pipeline (#288).
+
+## Breaking changes
+
+* Minimum R version bumped to 4.1.0 (from 3.5.0). Examples in the pipeline
+  functions use the native `|>` pipe, introduced in 4.1.0.
+
+* Terminal age group labels now use `[N,Inf)` notation instead of `N+` when
+  bracket notation is used (e.g. `[0,5)`, `[5,15)`, `[15,Inf)`). This matches
+  the contactmatrix package and gives parseable interval notation across all
+  age groups. It affects matrix dimnames and the `age.group` column in
+  `$participants`; code that matches on strings like `"15+"` will need
+  updating to `"[15,Inf)"`. Dash notation (e.g. `"15+"`) is unchanged.
+
+## New features
+
+* New `[.contact_survey` method allows filtering survey objects with
+  expressions, e.g. `polymod[country == "United Kingdom"]` (#161).
+
+* New `weigh()` function for composable participant weighting: supports
+  day-of-week groups, named target vectors, direct numeric columns, and
+  population post-stratification (#161).
+
+* New `compute_matrix()` function computes a contact matrix from a prepared
+  survey. It is the final step of the pipeline after `assign_age_groups()`
+  and (optionally) `weigh()` (#161).
+
+* New post-processing functions `symmetrise()`, `split_matrix()`, and
+  `per_capita()` operate on `compute_matrix()` output. `symmetrise()` enforces
+  reciprocity, `split_matrix()` decomposes into mean contacts, normalisation,
+  and an assortativity matrix, and `per_capita()` converts to per-capita rates.
+  Example workflow (#161):
+
+    ```r
+    uk_pop <- data.frame(
+      lower.age.limit = c(0, 5, 15),
+      population = c(3500000, 6000000, 50000000)
+    )
+    polymod[country == "United Kingdom"] |>
+      assign_age_groups(age_limits = c(0, 5, 15)) |>
+      compute_matrix() |>
+      symmetrise(survey_pop = uk_pop)
+    ```
+
+* Pipeline functions (`compute_matrix()`, `symmetrise()`, `split_matrix()`,
+  `per_capita()`) return a `contact_matrix` S3 class with `print()`, `plot()`,
+  and `as.matrix()` methods. The class inherits from `list`, so existing code
+  using `$matrix` or `$participants` continues to work.
+
+* New `contact_age_distribution()` function extracts the empirical age
+  distribution of contacts from a survey. Pass it to
+  `assign_age_groups(estimated_contact_age = ...)` to impute ages from
+  ranges by sampling from the reference distribution instead of uniformly.
+  This matters for surveys where many contacts have broad age bands, since
+  uniform sampling would flatten age-assortativity.
+
+* New `agegroups_to_limits()` function converts age group labels back to lower
+  age limits, the inverse of `limits_to_agegroups()`.
+
+* `compute_matrix()` gains a `weight_threshold` parameter to cap extreme
+  weights before normalisation, matching the `contact_matrix()` option (#131).
+
+## Bug fixes
+
+* Fixed bug where participants with NA `dayofweek` were incorrectly weighted
+  as weekend days. They now receive an average weight across all days (#131).
+
+* Fixed unmatched-merge warning count when merging files with duplicate keys;
+  previously, the count could be wrong (or negative) due to counting join
+  pairs rather than distinct matched rows (#289).
+
+* `matrix_plot()` now restores all graphical parameters (`par()`) on exit,
+  including when the function errors mid-plot. Previously the legend
+  parameters (`new`, `pty`) and the error handler (`err`) were left
+  modified in the user's session (#307).
+
+## Deprecations
+
+* `wpp_age()` and `wpp_countries()` are now soft-deprecated. Pass population
+  data directly via the `survey_pop` argument instead. The underlying
+  `wpp2017` data is also outdated; the `wpp2024` package from GitHub provides
+  more recent data (#258).
+
+* `contact_matrix()` now warns when it would look up population data
+  automatically via `wpp_age()`. This automatic lookup happens when
+  `symmetric`, `split`, `per_capita`, `weigh_age`, or `return_demography` is
+  set and `countries` is given (or the participant data has a `country`
+  column) without an explicit `survey_pop`. The implicit lookup will be
+  removed in a future release; pass `survey_pop` directly (e.g. from
+  `survey_country_population()` or the `wpp2024` package) to silence the
+  warning and make the code forwards-compatible.
+
+* `get_survey()`, `download_survey()`, `list_surveys()`, `get_citation()`, and
+  `survey_countries()` now warn unconditionally when called. These functions
+  were soft-deprecated in 0.5.0 and users should switch to the
+  [contactsurveys](https://cran.r-project.org/package=contactsurveys) package
+  (#269).
+
+## Internal
+
+* `contact_matrix()` now uses `assign_age_groups()` internally, removing
+  duplicated code (#227).
+
+* `contact_matrix()` now uses `weigh()` internally for all weighting
+  (day-of-week, age, and user-defined). The helpers
+  `warn_multiple_observations()` and `normalise_weights()` were extracted
+  so `compute_matrix()` can share them (#131).
+
+* The vignette and README are rewritten around the pipeline (#288).
+
+* Enabled `cyclocomp_linter`, `line_length_linter`, and `object_usage_linter`.
+  Disabled `indentation_linter` (air handles indentation). Reduced cyclomatic
+  complexity of `check.contact_survey()`, `[.contact_survey()`,
+  `find_unique_key()`, and `try_merge_additional_files()` by extracting
+  helper functions (#289).
+
 # socialmixr 0.5.1
 
 This is a patch release with a bug fix and documentation updates.

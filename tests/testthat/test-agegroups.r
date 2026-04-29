@@ -7,7 +7,7 @@ test_that("age groups can be created and manipulated", {
   age_groups <-
     expect_identical(
       as.character(unique(limits_to_agegroups(groups, notation = "brackets"))),
-      c("[0,5)", "[5,10)", "10+")
+      c("[0,5)", "[5,10)", "[10,Inf)")
     )
   expect_identical(
     as.character(unique(limits_to_agegroups(groups, notation = "dashes"))),
@@ -107,4 +107,30 @@ test_that("pop_age throws warnings or errors", {
     cran = FALSE,
     wpp_age("Germany", 2011)
   )
+})
+
+test_that("agegroups_to_limits round-trips (brackets)", {
+  limits <- c(0, 5, 10)
+  groups <- limits_to_agegroups(limits, notation = "brackets")
+  result <- agegroups_to_limits(groups)
+  expect_identical(result, limits)
+})
+
+test_that("agegroups_to_limits round-trips with limits_to_agegroups (dashes)", {
+  limits <- c(0, 5, 10)
+  groups <- limits_to_agegroups(limits, notation = "dashes")
+  result <- agegroups_to_limits(groups)
+  expect_identical(result, limits)
+})
+
+test_that("agegroups_to_limits works with character input", {
+  groups <- c("[0,5)", "[5,10)", "10+")
+  result <- agegroups_to_limits(groups)
+  expect_identical(result, c(0, 5, 10))
+})
+
+test_that("agegroups_to_limits works with single age group", {
+  groups <- factor("0+", levels = "0+", ordered = TRUE)
+  result <- agegroups_to_limits(groups)
+  expect_identical(result, 0)
 })

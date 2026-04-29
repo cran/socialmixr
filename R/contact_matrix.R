@@ -3,36 +3,111 @@
 #' Samples a contact survey
 #'
 #' @param survey a [survey()] object.
-#' @param countries limit to one or more countries; if NULL (default), will use all countries in the survey; these can be given as country names or 2-letter (ISO Alpha-2) country codes.
-#' @param survey_pop survey population -- either a data frame with columns 'lower.age.limit' and 'population', or a character vector giving the name(s) of a country or countries from the list that can be obtained via `wpp_countries`; if NULL (default), will use the country populations from the chosen countries, or all countries in the survey if `countries` is NULL.
-#' @param age_limits lower limits of the age groups over which to construct the matrix. If NULL (default), age limits are inferred from participant and contact ages.
-#' @param filter any filters to apply to the data, given as list of the form (column=filter_value) - only contacts that have 'filter_value' in 'column' will be considered. If multiple filters are given, they are all applied independently and in the sequence given. Default value is NULL; no filtering performed.
+#' @param countries limit to one or more countries; if NULL
+#'   (default), will use all countries in the survey; these can be
+#'   given as country names or 2-letter (ISO Alpha-2) country
+#'   codes.
+#' @param survey_pop survey population -- either a data frame with
+#'   columns 'lower.age.limit' and 'population', or a character
+#'   vector giving the name(s) of a country or countries from the
+#'   list that can be obtained via `wpp_countries`; if NULL
+#'   (default), will use the country populations from the chosen
+#'   countries, or all countries in the survey if `countries` is
+#'   NULL.
+#' @param age_limits lower limits of the age groups over which to
+#'   construct the matrix. If NULL (default), age limits are
+#'   inferred from participant and contact ages.
+#' @param filter any filters to apply to the data, given as list
+#'   of the form (column=filter_value) - only contacts that have
+#'   'filter_value' in 'column' will be considered. If multiple
+#'   filters are given, they are all applied independently and in
+#'   the sequence given. Default value is NULL; no filtering
+#'   performed.
 #' @param counts whether to return counts (instead of means).
-#' @param symmetric whether to make matrix symmetric, such that \eqn{c_{ij}N_i = c_{ji}N_j}.
-#' @param split whether to split the contact matrix into the mean number of contacts, in each age group (split further into the product of the mean number of contacts across the whole population (`mean.contacts`), a normalisation constant (`normalisation`) and age-specific variation in contacts (`contacts`)), multiplied with an assortativity matrix (`assortativity`) and a population multiplier (`demography`). For more detail on this, see the "Getting Started" vignette.
-#' @param sample_participants whether to sample participants randomly (with replacement); done multiple times this can be used to assess uncertainty in the generated contact matrices. See the "Bootstrapping" section in the vignette for how to do this.
-#' @param estimated_participant_age if set to "mean" (default), people whose ages are given as a range (in columns named "..._est_min" and "..._est_max") but not exactly (in a column named "..._exact") will have their age set to the mid-point of the range; if set to "sample", the age will be sampled from the range; if set to "missing", age ranges will be treated as missing
-#' @param estimated_contact_age if set to "mean" (default), contacts whose ages are given as a range (in columns named "..._est_min" and "..._est_max") but not exactly (in a column named "..._exact") will have their age set to the mid-point of the range; if set to "sample", the age will be sampled from the range; if set to "missing", age ranges will be treated as missing.
-#' @param missing_participant_age if set to "remove" (default), participants without age information are removed; if set to "keep", participants with missing age are kept and will appear in the contact matrix in a row labelled "NA".
-#' @param missing_contact_age if set to "remove" (default), participants that have contacts without age information are removed; if set to "sample", contacts without age information are sampled from all the contacts of participants of the same age group; if set to "keep", contacts with missing age are kept and will appear in the contact matrix in a column labelled "NA"; if set to "ignore", contacts without age information are removed from the analysis (but the participants that made them are kept).
-#' @param weights column names(s) of the participant data of the [survey()] object with user-specified weights (default = empty vector).
-#' @param weigh_dayofweek whether to weigh social contacts data by the day of the week (weight (5/7 / N_week / N) for weekdays and (2/7 / N_weekend / N) for weekends).
-#' @param weigh_age whether to weigh social contacts data by the age of the participants (vs. the populations' age distribution).
-#' @param weight_threshold threshold value for the standardized weights before running an additional standardisation (default 'NA' = no cutoff).
-#' @param symmetric_norm_threshold threshold value for the normalization weights when `symmetric = TRUE` before showing a warning that that large differences in the size of the sub-populations are likely to result in artefacts when making the matrix symmetric (default 2).
-#' @param sample_all_age_groups what to do if sampling participants (with `sample_participants = TRUE`) fails to sample participants from one or more age groups; if FALSE (default), corresponding rows will be set to NA, if TRUE the sample will be discarded and a new one taken instead.
-#' @param sample_participants_max_tries maximum number of attempts when `sample_all_age_groups = TRUE`; defaults to 1000.
-#' @param return_part_weights boolean to return the participant weights.
-#' @param return_demography boolean to explicitly return demography data that corresponds to the survey data (default 'NA' = if demography data is requested by other function parameters).
-#' @param per_capita whether to return a matrix with contact rates per capita (default is FALSE and not possible if 'counts=TRUE' or 'split=TRUE').
-#' @param survey.pop,age.limits,sample.participants,estimated.participant.age,estimated.contact.age,missing.participant.age,missing.contact.age,weigh.dayofweek,weigh.age,weight.threshold,symmetric.norm.threshold,sample.all.age.groups,sample.participants.max.tries,return.part.weights,return.demography,per.capita
-#'   `r lifecycle::badge("deprecated")` Use the
-#'   underscore-separated versions of these arguments instead.
-#' @param ... further arguments to pass to [get_survey()], [check()] and [pop_age()] (especially column names).
-#' @return a contact matrix, and the underlying demography of the surveyed population
+#' @param symmetric whether to make matrix symmetric, such that
+#'   \eqn{c_{ij}N_i = c_{ji}N_j}.
+#' @param split whether to split the contact matrix into the mean
+#'   number of contacts, in each age group (split further into the
+#'   product of the mean number of contacts across the whole
+#'   population (`mean.contacts`), a normalisation constant
+#'   (`normalisation`) and age-specific variation in contacts
+#'   (`contacts`)), multiplied with an assortativity matrix
+#'   (`assortativity`) and a population multiplier (`demography`).
+#'   For more detail on this, see the "Getting Started" vignette.
+#' @param sample_participants whether to sample participants
+#'   randomly (with replacement); done multiple times this can be
+#'   used to assess uncertainty in the generated contact matrices.
+#'   See the "Bootstrapping" section in the vignette for how to
+#'   do this.
+#' @param estimated_participant_age if set to "mean" (default),
+#'   people whose ages are given as a range (in columns named
+#'   "..._est_min" and "..._est_max") but not exactly (in a
+#'   column named "..._exact") will have their age set to the
+#'   mid-point of the range; if set to "sample", the age will be
+#'   sampled from the range; if set to "missing", age ranges will
+#'   be treated as missing
+#' @param estimated_contact_age if set to "mean" (default),
+#'   contacts whose ages are given as a range (in columns named
+#'   "..._est_min" and "..._est_max") but not exactly (in a
+#'   column named "..._exact") will have their age set to the
+#'   mid-point of the range; if set to "sample", the age will be
+#'   sampled from the range; if set to "missing", age ranges will
+#'   be treated as missing.
+#' @param missing_participant_age if set to "remove" (default),
+#'   participants without age information are removed; if set to
+#'   "keep", participants with missing age are kept and will
+#'   appear in the contact matrix in a row labelled "NA".
+#' @param missing_contact_age if set to "remove" (default),
+#'   participants that have contacts without age information are
+#'   removed; if set to "sample", contacts without age information
+#'   are sampled from all the contacts of participants of the same
+#'   age group; if set to "keep", contacts with missing age are
+#'   kept and will appear in the contact matrix in a column
+#'   labelled "NA"; if set to "ignore", contacts without age
+#'   information are removed from the analysis (but the
+#'   participants that made them are kept).
+#' @param weights column name(s) of the participant data of the
+#'   [survey()] object with user-specified weights (default =
+#'   empty vector).
+#' @param weigh_dayofweek whether to weigh social contacts data
+#'   by the day of the week (weight (5/7 / N_week / N) for
+#'   weekdays and (2/7 / N_weekend / N) for weekends).
+#' @param weigh_age whether to weigh social contacts data by the
+#'   age of the participants (vs. the populations' age
+#'   distribution).
+#' @param weight_threshold threshold value for the standardized
+#'   weights before running an additional standardisation (default
+#'   'NA' = no cutoff).
+#' @param symmetric_norm_threshold threshold value for the
+#'   normalization weights when `symmetric = TRUE` before showing
+#'   a warning that that large differences in the size of the
+#'   sub-populations are likely to result in artefacts when making
+#'   the matrix symmetric (default 2).
+#' @param sample_all_age_groups what to do if sampling
+#'   participants (with `sample_participants = TRUE`) fails to
+#'   sample participants from one or more age groups; if FALSE
+#'   (default), corresponding rows will be set to NA, if TRUE the
+#'   sample will be discarded and a new one taken instead.
+#' @param sample_participants_max_tries maximum number of attempts
+#'   when `sample_all_age_groups = TRUE`; defaults to 1000.
+#' @param return_part_weights boolean to return the participant
+#'   weights.
+#' @param return_demography boolean to explicitly return
+#'   demography data that corresponds to the survey data (default
+#'   'NA' = if demography data is requested by other function
+#'   parameters).
+#' @param per_capita whether to return a matrix with contact rates
+#'   per capita (default is FALSE and not possible if 'counts=TRUE'
+#'   or 'split=TRUE').
+# nolint start: line_length_linter.
+#' @param survey.pop,age.limits,sample.participants,estimated.participant.age,estimated.contact.age,missing.participant.age,missing.contact.age,weigh.dayofweek,weigh.age,weight.threshold,symmetric.norm.threshold,sample.all.age.groups,sample.participants.max.tries,return.part.weights,return.demography,per.capita `r lifecycle::badge("deprecated")` Use the underscore-separated versions of these arguments instead.
+# nolint end
+#' @param ... further arguments to pass to [get_survey()],
+#'   [check()] and [pop_age()] (especially column names).
+#' @return a contact matrix, and the underlying demography of the
+#'   surveyed population
 #' @importFrom stats xtabs runif median
 #' @importFrom utils data globalVariables
-#' @importFrom data.table copy
 #' @importFrom countrycode countrycode
 #' @importFrom rlang %||%
 #' @import data.table
@@ -46,6 +121,7 @@
 #'   age_limits = c(0, 1, 5, 15)
 #' )
 #' @author Sebastian Funk
+# nolint start: cyclocomp_linter.
 contact_matrix <- function(
   survey,
   countries = NULL,
@@ -223,95 +299,30 @@ contact_matrix <- function(
     )
   }
 
-  survey <- copy(survey)
-
   check_if_contact_survey(survey)
+
+  survey <- copy_survey(survey)
   check_age_limits_increasing(age_limits)
 
   ## Warn if survey has multiple observations per participant ------------------
-  n_participants <- uniqueN(survey$participants$part_id)
-  n_rows <- nrow(survey$participants)
-  if (n_participants < n_rows) {
-    obs_key <- survey$observation_key
-    if (!is.null(obs_key) && length(obs_key) > 0) {
-      cli::cli_warn(
-        c(
-          "Survey contains multiple observations per participant \\
-           ({n_rows} rows, {n_participants} unique participants).",
-          "*" = "Results will aggregate across all observations.",
-          i = "Use {.arg filter} to select by {.val {obs_key}}."
-        )
-      )
-    } else {
-      cli::cli_warn(
-        c(
-          "Survey contains multiple observations per participant \\
-           ({n_rows} rows, {n_participants} unique participants).",
-          "*" = "Results will aggregate across all observations.",
-          i = "Use the {.arg filter} argument to select specific observations."
-        )
-      )
-    }
-  }
+  warn_multiple_observations(
+    participants = survey$participants,
+    observation_key = survey$observation_key,
+    filter_hint = "legacy"
+  )
 
   ## Filter to specific countries ----------------------------------------------
   # If a survey contains data from multiple countries or if countries specified
   survey$participants <- filter_countries(survey$participants, countries)
 
-  ## Process participant ages: deal with ranges and missing data ---------------
-  survey$participants <- add_part_age(survey$participants)
-
-  ## sample estimated participant ages
-  survey$participants <- impute_participant_ages(
-    participants = survey$participants,
-    estimate = estimated_participant_age
-  )
-
-  # define age limits if not given
-  age_limits <- age_limits %||% get_age_limits(survey)
-
-  survey$participants <- drop_invalid_ages(
-    participants = survey$participants,
-    missing_action = missing_participant_age,
-    age_limits = age_limits
-  )
-
-  ## Process contact ages: deal with ranges and missing data -------------------
-  ## set contact age if it's not in the data
-  survey$contacts <- add_contact_age(survey$contacts)
-
-  ## convert factors to integers, preserving numeric values
-  survey$contacts <- convert_factor_to_integer(
-    data = survey$contacts,
-    cols = c(
-      "cnt_age",
-      "cnt_age_est_min",
-      "cnt_age_est_max",
-      "cnt_age_exact"
-    )
-  )
-
-  ## sample estimated contact ages
-  survey$contacts <- impute_contact_ages(
-    contacts = survey$contacts,
-    estimate = estimated_contact_age
-  )
-
-  # remove contact ages below the age limit, before dealing with missing contact ages
-  survey$contacts <- drop_ages_below_age_limit(
-    data = survey$contacts,
-    age_limits = age_limits
-  )
-
-  survey$participants <- drop_invalid_contact_ages(
-    contacts = survey$contacts,
-    participants = survey$participants,
-    missing_action = missing_contact_age
-  )
-
-  survey$contacts <- drop_missing_contact_ages(
-    contacts = survey$contacts,
-    missing_action = missing_contact_age
+  ## Process ages: impute from ranges, handle missing, assign age groups -------
+  survey <- assign_age_groups(
+    survey,
+    age_limits = age_limits,
+    estimated_participant_age = estimated_participant_age,
+    estimated_contact_age = estimated_contact_age,
+    missing_participant_age = missing_participant_age,
+    missing_contact_age = missing_contact_age
   )
 
   ## check if any filters have been requested ----------------------------------
@@ -321,11 +332,8 @@ contact_matrix <- function(
     filter = filter
   )
 
-  ## adjust age.group.breaks to the lower and upper ages in the survey ---------
-  survey$participants <- adjust_ppt_age_group_breaks(
-    participants = survey$participants,
-    age_limits = age_limits
-  )
+  ## recover resolved age_limits from the assigned age groups ------------------
+  age_limits <- agegroups_to_limits(survey$participants$age.group)
 
   ## ---------------------------------------------------------------------------
   ## if split, symmetric, or age weights are requested, get demographic data
@@ -339,7 +347,32 @@ contact_matrix <- function(
   )
 
   if (need_survey_pop) {
-    ## check if survey population is either not given or is a vector of countries
+    ## warn if population data will be looked up automatically -----------------
+    has_country_info <- !is.null(countries) ||
+      "country" %in% colnames(survey$participants)
+    if ((is.null(survey_pop) || is.character(survey_pop)) && has_country_info) {
+      lifecycle::deprecate_warn(
+        when = "0.6.0",
+        what = I("Automatic country population lookup in `contact_matrix()`"),
+        details = c(
+          paste(
+            "When `countries` is given (or a `country` column is present)",
+            "without `survey_pop`, contact_matrix() currently calls the",
+            "soft-deprecated `wpp_age()` to look up population data. This",
+            "automatic lookup will be removed in a future release: callers",
+            "will then have to supply `survey_pop` whenever `symmetric`,",
+            "`split`, `per_capita`, `weigh_age`, or `return_demography` is",
+            "TRUE."
+          ),
+          i = paste(
+            "Pass `survey_pop` explicitly to silence this warning, e.g.",
+            "`survey_pop = survey_country_population(survey, countries)` or a",
+            "data frame from the wpp2024 package."
+          )
+        )
+      )
+    }
+    ## check if survey population is not given or is a country vector
     survey_pop_info <- survey_pop_year(
       survey_pop = survey_pop,
       countries = countries,
@@ -373,30 +406,47 @@ contact_matrix <- function(
   ## Process weights -----------------------------------------------------------
   survey$participants[, weight := 1]
 
-  ## assign weights to participants to account for weekend/weekday variation
   if (weigh_dayofweek) {
-    survey$participants <- weight_by_day_of_week(survey$participants)
+    if ("dayofweek" %in% colnames(survey$participants)) {
+      survey <- weigh(
+        survey,
+        "dayofweek",
+        target = c(5, 2),
+        groups = list(1:5, c(0, 6))
+      )
+      # Add is.weekday for return_part_weights compatibility
+      # Use fifelse to preserve NA (NA %in% 1:5 would return FALSE)
+      survey$participants[,
+        is.weekday := fifelse(is.na(dayofweek), NA, dayofweek %in% 1:5)
+      ]
+    } else {
+      cli::cli_warn(
+        c(
+          "{.code weigh_dayofweek} is {.val TRUE}, but no {.col dayofweek} \\
+            column in the data.",
+          i = "Will ignore."
+        )
+      )
+      weigh_dayofweek <- FALSE
+    }
   }
 
-  ## assign weights to participants, to account for age variation
   if (weigh_age) {
-    survey$participants <- weight_by_age(survey$participants, survey_pop.full)
+    survey <- weigh(survey, "part_age", target = survey_pop.full)
   }
 
-  ## option to weigh the contact data with user-defined participant weights
   if (length(weights) > 0) {
-    survey$participants <- weigh_by_user_defined(survey$participants, weights)
+    for (w in weights) {
+      survey <- weigh(survey, w)
+    }
   }
 
-  # post-stratification weight standardisation: by age.group
-  survey$participants[, weight := weight / sum(weight) * .N, by = age.group]
-
-  # option to truncate overall participant weights (if not NULL or NA)
-  if (!is.null(weight_threshold) && !is.na(weight_threshold)) {
-    survey$participants[weight > weight_threshold, weight := weight_threshold]
-    # re-normalise
-    survey$participants[, weight := weight / sum(weight) * .N, by = age.group]
-  }
+  # Post-stratification normalisation (with optional threshold)
+  normalise_weights(
+    survey$participants,
+    by = "age.group",
+    threshold = weight_threshold
+  )
 
   ## merge participants and contacts into a single data table ------------------
   survey$contacts <- merge_participants_contacts(
@@ -555,3 +605,4 @@ contact_matrix <- function(
 
   ret
 }
+# nolint end

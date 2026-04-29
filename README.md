@@ -28,18 +28,35 @@ package
 remotes::install_github("epiforecasts/socialmixr")
 ```
 
+# Usage
+
+Contact matrices are computed through a small pipeline of composable
+functions: subsetting the survey, assigning age groups, optionally
+weighing participants, and computing the matrix. A minimal example using
+the included POLYMOD data:
+
+``` r
+library(socialmixr)
+data(polymod)
+
+polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
+  compute_matrix()
+```
+
+Post-processing functions `symmetrise()`, `split_matrix()` and
+`per_capita()` can be piped after `compute_matrix()` to enforce
+symmetry, decompose the matrix, or convert to per-capita contact rates.
+
 # Documentation
 
-For information on how to use the socialmixr package, see the
-[introduction
+For more on how to use the socialmixr package, see the [introduction
 vignette](https://epiforecasts.io/socialmixr/articles/socialmixr.html).
 
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-
 <!-- prettier-ignore-start -->
-
 <!-- markdownlint-disable -->
 
 All contributions to this project are gratefully acknowledged using the
@@ -83,7 +100,8 @@ specification. Contributions of any kind are welcome!
 <a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+author%3AIsaacStopard">IsaacStopard</a>,
 <a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+author%3Aavallecam">avallecam</a>,
 <a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+author%3Amaishaoshao">maishaoshao</a>,
-<a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+author%3AFrancescoBonacina">FrancescoBonacina</a>
+<a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+author%3AFrancescoBonacina">FrancescoBonacina</a>,
+<a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+author%3Alucy-gf">lucy-gf</a>
 
 ### Issue Contributors
 
@@ -92,7 +110,5 @@ specification. Contributions of any kind are welcome!
 <a href="https://github.com/epiforecasts/socialmixr/issues?q=is%3Aissue+commenter%3Ajoshwlambert">joshwlambert</a>
 
 <!-- markdownlint-enable -->
-
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->

@@ -3,6 +3,58 @@ has_names <- function(x, nm) {
   all(nm %in% names(x))
 }
 
+#' Warn if survey has multiple observations per participant
+#'
+#' @description
+#' Issues a warning when a survey contains multiple observations per
+#' participant (more rows than unique part_id values).
+#'
+#' @param participants participant data.table
+#' @param observation_key optional column name(s) identifying observations
+#' @param filter_hint character; "pipeline" for pipeline-style hint or
+#'   "legacy" for contact_matrix-style hint
+#' @returns NULL invisibly
+#' @keywords internal
+#' @autoglobal
+warn_multiple_observations <- function(
+  participants,
+  observation_key = NULL,
+  filter_hint = c("pipeline", "legacy")
+) {
+  filter_hint <- match.arg(filter_hint)
+  n_participants <- uniqueN(participants$part_id)
+  n_rows <- nrow(participants)
+  if (n_participants >= n_rows) {
+    return(invisible(NULL))
+  }
+
+  has_obs_key <- !is.null(observation_key) && length(observation_key) > 0
+  hint <- if (has_obs_key && filter_hint == "pipeline") {
+    cli::format_inline(
+      "Use {.code survey[{observation_key} == ...]} to select specific \\
+       observations before calling {.fn compute_matrix}."
+    )
+  } else if (has_obs_key) {
+    cli::format_inline(
+      "Use {.arg filter} to select by {.val {observation_key}}."
+    )
+  } else if (filter_hint == "pipeline") {
+    "Filter the survey with {.code survey[...]} to select specific \\
+     observations before calling {.fn compute_matrix}."
+  } else {
+    "Use the {.arg filter} argument to select specific observations."
+  }
+
+  cli::cli_warn(c(
+    "Survey contains multiple observations per participant \\
+     ({n_rows} rows, {n_participants} unique participants).",
+    "*" = "Results will aggregate across all observations.",
+    i = hint
+  ))
+
+  invisible(NULL)
+}
+
 #' Impute ages from ranges (generic helper)
 #'
 #' @description
@@ -21,7 +73,9 @@ impute_ages <- function(
   prefix,
   estimate = c("mean", "sample", "missing")
 ) {
-  estimate <- rlang::arg_match(estimate)
+  if (!is.data.frame(estimate)) {
+    estimate <- rlang::arg_match(estimate)
+  }
 
   # Build column names from prefix
   age_col <- prefix
@@ -30,11 +84,11 @@ impute_ages <- function(
   max_col <- paste0(prefix, "_est_max")
 
   age_cols_in_data <- has_names(data, c(min_col, max_col))
-  if (!age_cols_in_data || estimate == "missing") {
+  if (!age_cols_in_data || identical(estimate, "missing")) {
     return(data)
   }
 
-  if (estimate == "mean") {
+  if (identical(estimate, "mean")) {
     # Impute using mean of min/max range
     data[
       is.na(get(exact_col)) &
@@ -43,18 +97,72 @@ impute_ages <- function(
       (age_col) := as.integer(rowMeans(.SD)),
       .SDcols = c(min_col, max_col)
     ]
-  } else if (estimate == "sample") {
-    # Impute by sampling uniformly from range
+  } else if (identical(estimate, "sample")) {
+    # Impute by sampling uniformly from range; runif() excludes its upper
+    # bound, so use max + 1 to make the integer draw inclusive of max.
     data[
       is.na(get(age_col)) &
         !is.na(get(min_col)) &
         !is.na(get(max_col)) &
         get(min_col) <= get(max_col),
-      (age_col) := as.integer(runif(.N, get(min_col), get(max_col)))
+      (age_col) := as.integer(runif(.N, get(min_col), get(max_col) + 1L))
     ]
+  } else if (is.data.frame(estimate)) {
+    # Impute by sampling from a supplied age distribution within [min, max]
+    rows_to_impute <- data[,
+      which(
+        is.na(get(age_col)) &
+          !is.na(get(min_col)) &
+          !is.na(get(max_col)) &
+          get(min_col) <= get(max_col)
+      )
+    ]
+    if (length(rows_to_impute) > 0) {
+      data[
+        rows_to_impute,
+        (age_col) := sample_from_age_distribution(
+          get(min_col),
+          get(max_col),
+          estimate
+        )
+      ]
+    }
   }
 
   data
+}
+
+#' Sample ages from a distribution within `[min, max]` bands
+#' @param mins integer vector of lower bounds
+#' @param maxs integer vector of upper bounds
+#' @param distribution data.frame with `age` and `proportion` columns
+#' @returns integer vector of sampled ages
+#' @keywords internal
+sample_from_age_distribution <- function(mins, maxs, distribution) {
+  n <- length(mins)
+  result <- integer(n)
+  fell_back <- FALSE
+  for (i in seq_len(n)) {
+    lo <- mins[i]
+    hi <- maxs[i]
+    sub_dist <- distribution[distribution$age >= lo & distribution$age <= hi, ]
+    if (nrow(sub_dist) == 0 || sum(sub_dist$proportion) == 0) {
+      fell_back <- TRUE
+      # Upper bound inclusive: runif() excludes its upper bound, so use hi + 1
+      result[i] <- as.integer(runif(1, lo, hi + 1))
+    } else if (nrow(sub_dist) == 1) {
+      result[i] <- sub_dist$age
+    } else {
+      result[i] <- sample(sub_dist$age, size = 1, prob = sub_dist$proportion)
+    }
+  }
+  if (fell_back) {
+    cli::cli_warn(
+      "Age distribution has no coverage for some age bands; \\
+       falling back to uniform sampling for those contacts."
+    )
+  }
+  result
 }
 
 #' Impute participant ages
@@ -200,7 +308,8 @@ filter_countries <- function(participants, countries) {
 #' @param data A data.table containing age data
 #' @param prefix Column name prefix: "part_age" for participants, "cnt_age" for
 #'   contacts
-#' @returns The data with the age column set from exact ages or initialised to NA
+#' @returns The data with the age column set from exact ages or
+#'   initialised to NA
 #' @autoglobal
 #' @keywords internal
 add_age <- function(data, prefix) {
@@ -312,11 +421,12 @@ apply_data_filter <- function(
   survey
 }
 
-# converts from [0,1) [1,5) [5,15) [15,80) to [0,1) [1,5) [5,15) 15+
+# converts from [0,1) [1,5) [5,15) [15,80) to [0,1) [1,5) [5,15) [15,Inf)
 #' @autoglobal
 final_age_group_label <- function(age_groups) {
-  age_groups[length(age_groups)] <-
-    sub("\\[([0-9]+),.*$", "\\1+", age_groups[length(age_groups)])
+  last <- age_groups[length(age_groups)]
+  lower <- sub("\\[([0-9]+),.*$", "\\1", last)
+  age_groups[length(age_groups)] <- paste0("[", lower, ",Inf)")
   age_groups
 }
 
@@ -396,7 +506,7 @@ add_upper_age_limits <- function(
 #' @autoglobal
 survey_pop_from_data <- function(survey_pop, part_age_group_present) {
   survey_pop <- data.table(survey_pop)
-  # make sure the maximum survey_pop age exceeds the participant age group breaks
+  # make sure max survey_pop age exceeds participant age group breaks
   if (max(survey_pop$lower.age.limit) < max(part_age_group_present)) {
     survey_pop <- rbind(
       survey_pop,
@@ -486,10 +596,7 @@ survey_pop_from_countries <- function(
   }
 
   if (survey_representative) {
-    survey_pop <- participants[,
-      lower.age.limit := reduce_agegroups(part_age, age_limits)
-    ]
-    survey_pop <- survey_pop[, list(population = .N), by = lower.age.limit]
+    survey_pop <- participants[, list(population = .N), by = lower.age.limit]
     survey_pop <- survey_pop[!is.na(lower.age.limit)]
     if ("year" %in% colnames(participants)) {
       survey_year <- participants[, median(year, na.rm = TRUE)]
@@ -522,7 +629,7 @@ survey_pop_year <- function(
     survey_year <- survey_pop_info$survey_year
   } else {
     part_age_group_present <- get_age_group_lower_limits(age_limits)
-    # if survey_pop is a data frame with columns 'lower.age.limit' and 'population'
+    # survey_pop is a data frame with 'lower.age.limit' and 'population'
     survey_pop <- survey_pop_from_data(survey_pop, part_age_group_present)
 
     # add dummy survey_year
@@ -666,49 +773,33 @@ weigh_by_user_defined <- function(participants, weights) {
   participants
 }
 
+#' Post-stratification weight normalisation
+#'
+#' @description
+#' Normalises participant weights within groups so that they sum to the number
+#' of participants in each group. Optionally truncates extreme weights to a
+#' threshold and re-normalises.
+#'
+#' @param participants participant data.table with a `weight` column
+#' @param by character; column name(s) to group by (default "age.group")
+#' @param threshold numeric; if provided, weights above this value are capped
+#'   and the weights are re-normalised (default NULL)
+#' @returns the participants data.table (modified by reference)
+#' @keywords internal
 #' @autoglobal
-truncate_renormalise_weights <- function(participants, weight_threshold) {
-  if (!is.null(weight_threshold) && !is.na(weight_threshold)) {
-    participants[weight > weight_threshold, weight := weight_threshold]
-    # re-normalise
-    participants[, weight := weight / sum(weight) * .N, by = age.group]
-  }
-  participants
-}
-
-#' @autoglobal
-participant_weights <- function(
+normalise_weights <- function(
   participants,
-  survey_pop_full,
-  weights,
-  weigh_dayofweek,
-  weigh_age,
-  weight_threshold
+  by = "age.group",
+  threshold = NULL
 ) {
-  participants[, weight := 1]
+  participants[, weight := weight / sum(weight) * .N, by = c(by)]
 
-  ## assign weights to participants to account for weekend/weekday variation
-  if (weigh_dayofweek) {
-    participants <- weight_by_day_of_week(participants)
+  if (!is.null(threshold) && !is.na(threshold)) {
+    participants[weight > threshold, weight := threshold]
+    participants[, weight := weight / sum(weight) * .N, by = c(by)]
   }
 
-  ## assign weights to participants, to account for age variation
-  if (weigh_age) {
-    participants <- weight_by_age(participants, survey_pop_full)
-  }
-
-  ## option to weigh the contact data with user-defined participant weights
-  if (length(weights) > 0) {
-    participants <- weigh_by_user_defined(participants, weights)
-  }
-
-  # post-stratification weight standardisation: by age.group
-  participants[, weight := weight / sum(weight) * .N, by = age.group]
-
-  # option to truncate overall participant weights (if not NULL or NA)
-  participants <- truncate_renormalise_weights(participants, weight_threshold)
-
-  participants
+  invisible(participants)
 }
 
 ## merge participants and contacts into a single data table
@@ -770,7 +861,7 @@ impute_age_by_sample <- function(contacts) {
       ## some contacts in the age group have an age, sample from these
       contacts <- sample_present_age(contacts, this_age_group)
     } else if (nrow(contacts[!is.na(cnt_age), ]) > 0) {
-      ## no contacts in the age group have an age, sample uniformly between limits
+      ## no contacts in the age group have an age, sample uniformly
       contacts <- sample_uniform_age(contacts, this_age_group)
     }
   }

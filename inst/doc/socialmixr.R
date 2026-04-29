@@ -10,72 +10,133 @@ library(socialmixr)
 library(ggplot2)
 data(polymod)
 
-## ----eval=FALSE---------------------------------------------------------------
-# ?contact_matrix
+## -----------------------------------------------------------------------------
+polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
+  compute_matrix()
 
 ## -----------------------------------------------------------------------------
-contact_matrix(polymod, countries = "United Kingdom", age_limits = c(0, 1, 5, 15))
+uk_grouped <- polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 1, 5, 15))
+
+head(uk_grouped$participants[, c("part_id", "part_age", "age.group")])
+head(uk_grouped$contacts[, c("part_id", "cnt_age", "contact.age.group")])
 
 ## -----------------------------------------------------------------------------
 unique(polymod$participants$country)
 
 ## -----------------------------------------------------------------------------
-m <- replicate(
-  n = 5,
-  contact_matrix(
-    polymod,
-    countries = "United Kingdom", age_limits = c(0, 1, 5, 15),
-    sample_participants = TRUE
+polymod[country %in% c("United Kingdom", "Germany")]
+
+## -----------------------------------------------------------------------------
+bootstrap <- function(survey) {
+  sampled_ids <- sample(
+    unique(survey$participants$part_id),
+    replace = TRUE
   )
+  survey$participants <- survey$participants[
+    list(sampled_ids), on = "part_id"
+  ]
+  survey$contacts <- survey$contacts[
+    list(sampled_ids),
+    on = "part_id",
+    nomatch = NULL,
+    allow.cartesian = TRUE
+  ]
+  survey
+}
+
+uk <- polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 1, 5, 15))
+
+m <- suppressWarnings(
+  replicate(n = 5, uk |> bootstrap() |> compute_matrix())
 )
 mr <- Reduce("+", lapply(m["matrix", ], function(x) x / ncol(m)))
 mr
 
-## ----warning=FALSE, message=FALSE---------------------------------------------
-contact_matrix(polymod,
-  countries = "United Kingdom", age_limits = c(0, 20),
-  return_demography = TRUE
-)$demography
+## ----eval=requireNamespace("wpp2024", quietly = TRUE), message=FALSE, warning=FALSE----
+# data("popAge1dt", package = "wpp2024")
+# uk_pop <- popAge1dt[name == "United Kingdom" & year == 2020,
+#   .(lower.age.limit = age, population = pop * 1000)
+# ]
+# head(uk_pop)
 
 ## -----------------------------------------------------------------------------
-contact_matrix(polymod, countries = "United Kingdom", age_limits = c(0, 1, 5, 15), symmetric = TRUE)
+custom_pop <- data.frame(
+  lower.age.limit = c(0, 18, 60),
+  population = c(12000000, 35000000, 20000000)
+)
+
+## -----------------------------------------------------------------------------
+survey_country_population(polymod, countries = "United Kingdom")
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
-contact_matrix(survey = polymod, countries = "Germany", age_limits = c(0, 60), symmetric = TRUE, per_capita = TRUE)
+uk_pop <- survey_country_population(polymod, countries = "United Kingdom")
+
+polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
+  compute_matrix() |>
+  symmetrise(survey_pop = uk_pop)
+
+## ----message=FALSE, warning=FALSE---------------------------------------------
+de_pop <- survey_country_population(polymod, countries = "Germany")
+
+polymod[country == "Germany"] |>
+  assign_age_groups(age_limits = c(0, 60)) |>
+  compute_matrix() |>
+  symmetrise(survey_pop = de_pop) |>
+  per_capita(survey_pop = de_pop)
 
 ## -----------------------------------------------------------------------------
-contact_matrix(polymod, countries = "United Kingdom", age_limits = c(0, 1, 5, 15), split = TRUE)
+polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
+  compute_matrix() |>
+  split_matrix(survey_pop = uk_pop)
 
 ## ----warning=FALSE, message=FALSE---------------------------------------------
 # contact matrix for school-related contacts
-contact_matrix(polymod, age_limits = c(0, 20, 60), filter = list(cnt_school = 1))$matrix
+polymod[cnt_school == 1] |>
+  assign_age_groups(age_limits = c(0, 20, 60)) |>
+  compute_matrix()
 
 # contact matrix for work-related contacts involving physical contact
-contact_matrix(polymod, age_limits = c(0, 20, 60), filter = list(cnt_work = 1, phys_contact = 1))$matrix
+polymod[cnt_work == 1][phys_contact == 1] |>
+  assign_age_groups(age_limits = c(0, 20, 60)) |>
+  compute_matrix()
 
 # contact matrix for daily contacts at home with males
-contact_matrix(polymod, age_limits = c(0, 20, 60), filter = list(cnt_home = 1, cnt_gender = "M", duration_multi = 5))$matrix
+polymod[cnt_home == 1][cnt_gender == "M"][duration_multi == 5] |>
+  assign_age_groups(age_limits = c(0, 20, 60)) |>
+  compute_matrix()
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
-contact_matrix(
-  survey = polymod, age_limits = c(0, 18, 60), weigh_dayofweek = TRUE,
-  weigh_age = TRUE, return_part_weights = TRUE
-)
+polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 18, 60)) |>
+  weigh("dayofweek", target = c(5, 2), groups = list(1:5, c(0, 6))) |>
+  weigh("part_age", target = uk_pop) |>
+  compute_matrix()
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
-# e.g. use household size as (dummy) weight to provide more importance to participant data from large households
-contact_matrix(survey = polymod, age_limits = c(0, 18, 60), weights = "hh_size")
+polymod |>
+  assign_age_groups(age_limits = c(0, 18, 60)) |>
+  weigh("hh_size") |>
+  compute_matrix()
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
-contact_matrix(
-  survey = polymod, age_limits = c(0, 18, 60), weigh_dayofweek = TRUE,
-  weigh_age = TRUE, return_part_weights = TRUE, weight_threshold = 3
-)
+polymod[country == "United Kingdom"] |>
+  assign_age_groups(age_limits = c(0, 18, 60)) |>
+  weigh("dayofweek", target = c(5, 2), groups = list(1:5, c(0, 6))) |>
+  weigh("part_age", target = uk_pop) |>
+  compute_matrix(weight_threshold = 3)
 
 ## ----echo=FALSE---------------------------------------------------------------
 survey_data <- data.frame(
   age = c(1, 1, 2, 2, 2, 3),
-  day.of.week = as.factor(c("weekend", "weekend", "weekend", "week", "week", "week")),
+  day.of.week = as.factor(c(
+    "weekend", "weekend", "weekend",
+    "week", "week", "week"
+  )),
   age.group = NA,
   m_i = c(3, 2, 9, 10, 8, 15)
 )
@@ -99,10 +160,15 @@ P_age.group <- c(2000, 1000)
 P_day.of.week <- c(5 / 7, 2 / 7) * 3000
 
 ## ----echo=FALSE---------------------------------------------------------------
-cat(paste("unweighted average number of contacts:", round(mean(survey_data$m_i), digits = 2)))
+cat(paste(
+  "unweighted average number of contacts:",
+  round(mean(survey_data$m_i), digits = 2)
+))
 
 ## ----echo=FALSE---------------------------------------------------------------
-knitr::kable(aggregate(m_i ~ age + age.group, data = survey_data, mean))
+knitr::kable(aggregate(
+  m_i ~ age + age.group, data = survey_data, mean
+))
 
 ## ----echo=FALSE---------------------------------------------------------------
 # including population constants
@@ -141,7 +207,13 @@ knitr::kable(survey_data)
 # remove the weighted number of contacts
 survey_data$`m_i * w_tilde` <- NULL
 
-cat(paste("weighted average number of contacts:", round(mean(survey_data$m_i * survey_data$w_tilde), digits = 2)))
+cat(paste(
+  "weighted average number of contacts:",
+  round(
+    mean(survey_data$m_i * survey_data$w_tilde),
+    digits = 2
+  )
+))
 
 ## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(list(
@@ -154,16 +226,22 @@ survey_data$w_PS <- NA
 for (i in seq_len(nrow(survey_data))) {
   k_i <- survey_data$age.group[i]
   flag_k <- survey_data$age.group == k_i
-  survey_data$w_PS[i] <- survey_data$w[i] / sum(survey_data$w[flag_k]) * N_age.group[k_i]
+  survey_data$w_PS[i] <- survey_data$w[i] /
+    sum(survey_data$w[flag_k]) * N_age.group[k_i]
 }
 
 # round
-survey_data[, -(1:4)] <- round(survey_data[, -(1:4)], digits = 2)
+survey_data[, -(1:4)] <- round(
+  survey_data[, -(1:4)], digits = 2
+)
 
 knitr::kable(survey_data)
 
 ## ----echo=FALSE---------------------------------------------------------------
-knitr::kable(aggregate(m_i * w_PS ~ age.group, data = survey_data, mean))
+knitr::kable(aggregate(
+  m_i * w_PS ~ age.group,
+  data = survey_data, mean
+))
 
 ## ----echo=FALSE---------------------------------------------------------------
 survey_data$w <- NA
@@ -179,16 +257,25 @@ survey_data$w_PS <- NA
 for (i in seq_len(nrow(survey_data))) {
   k_i <- survey_data$age.group[i]
   flag_k <- survey_data$age.group == k_i
-  survey_data$w_PS[i] <- survey_data$w[i] / sum(survey_data$w[flag_k]) * N_age.group[k_i]
+  survey_data$w_PS[i] <- survey_data$w[i] /
+    sum(survey_data$w[flag_k]) * N_age.group[k_i]
 }
 
 # round
-survey_data[, -(1:4)] <- round(survey_data[, -(1:4)], digits = 2)
+survey_data[, -(1:4)] <- round(
+  survey_data[, -(1:4)], digits = 2
+)
 
 # print
 knitr::kable(survey_data)
 
-cat(paste("weighted average number of contacts:", round(mean(survey_data$m_i * survey_data$w_tilde), digits = 2)))
+cat(paste(
+  "weighted average number of contacts:",
+  round(
+    mean(survey_data$m_i * survey_data$w_tilde),
+    digits = 2
+  )
+))
 
 ## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(list(
@@ -226,11 +313,22 @@ for (i in seq_len(nrow(survey_data))) {
 survey_data$w_tilde <- survey_data$w / sum(survey_data$w) * N
 
 # round
-survey_data[, -(1:4)] <- round(survey_data[, -(1:4)], digits = 2)
+survey_data[, -(1:4)] <- round(
+  survey_data[, -(1:4)], digits = 2
+)
 knitr::kable(survey_data)
 
-cat(paste("unweighted average number of contacts:", round(mean(survey_data$m_i), digits = 2)))
-cat(paste("weighted average number of contacts:", round(mean(survey_data$m_i * survey_data$w_tilde), digits = 2)))
+cat(paste(
+  "unweighted average number of contacts:",
+  round(mean(survey_data$m_i), digits = 2)
+))
+cat(paste(
+  "weighted average number of contacts:",
+  round(
+    mean(survey_data$m_i * survey_data$w_tilde),
+    digits = 2
+  )
+))
 
 ## ----echo=FALSE---------------------------------------------------------------
 survey_data$w_tilde[survey_data$w_tilde > 3] <- 3
@@ -238,10 +336,20 @@ survey_data$w_tilde[survey_data$w_tilde > 3] <- 3
 ## ----echo=FALSE---------------------------------------------------------------
 survey_data$w_tilde[survey_data$w_tilde > 3] <- 3
 
-cat(paste("weighted average number of contacts after truncation:", round(mean(survey_data$m_i * survey_data$w_tilde), digits = 2)))
+cat(paste(
+  "weighted average number of contacts after truncation:",
+  round(
+    mean(survey_data$m_i * survey_data$w_tilde),
+    digits = 2
+  )
+))
 
 ## ----fig.width=4, fig.height=4------------------------------------------------
-df <- reshape2::melt(mr, varnames = c("age.group", "age.group.contact"), value.name = "contacts")
+df <- reshape2::melt(
+  mr,
+  varnames = c("age.group", "age.group.contact"),
+  value.name = "contacts"
+)
 ggplot(df, aes(x = age.group, y = age.group.contact, fill = contacts)) +
   theme(legend.position = "bottom") +
   geom_tile()
