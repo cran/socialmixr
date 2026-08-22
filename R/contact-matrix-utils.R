@@ -439,7 +439,7 @@ adjust_ppt_age_group_breaks <- function(
   max_age <- max_participant_age(participants)
 
   participants[,
-    lower.age.limit := reduce_agegroups(
+    lower.age.limit := reduce_age_groups(
       x = part_age,
       limits = age_limits
     )
@@ -659,7 +659,7 @@ add_survey_upper_age_limit <- function(survey, age_breaks) {
 #' @autoglobal
 survey_pop_reference <- function(survey_pop, ...) {
   data.table(
-    pop_age(
+    rebin_ages_numeric(
       survey_pop,
       seq(
         min(survey_pop$lower.age.limit),
@@ -673,7 +673,9 @@ survey_pop_reference <- function(survey_pop, ...) {
 #' @autoglobal
 adjust_survey_age_groups <- function(survey_pop, part_age_group_present, ...) {
   survey_pop_max <- max(survey_pop$upper.age.limit)
-  survey_pop <- data.table(pop_age(survey_pop, part_age_group_present, ...))
+  survey_pop <- data.table(
+    rebin_ages_numeric(survey_pop, part_age_group_present, ...)
+  )
 
   ## use the actual lower.age.limits from survey_pop (which may be a subset
   ## of part_age_group_present if population data doesn't cover all ages)
@@ -726,40 +728,46 @@ weight_by_day_of_week <- function(
 
 #' @autoglobal
 weight_by_age <- function(participants, survey_pop_full) {
-  # get number and proportion of participants by age
-  participants[, age.count := .N, by = part_age]
-  participants[, age.proportion := age.count / .N]
+  # Post-stratify by age at the reference population's native bands: bin each
+  # participant into a reference band and match the band's sample share to its
+  # target share. No interpolation to single-year ages.
+  ref_limits <- sort(survey_pop_full$lower.age.limit)
 
-  # get reference population by age (absolute and proportional)
-  part_age_all <- range(unique(participants[, part_age]))
-  survey_pop_detail <- data.table(pop_age(
-    survey_pop_full,
-    seq(part_age_all[1], part_age_all[2] + 1)
-  ))
-  names(survey_pop_detail) <- c("part_age", "population.count")
-  survey_pop_detail[,
-    population.proportion := population.count / sum(population.count)
+  participants[, age.band := reduce_age_groups(part_age, ref_limits)]
+
+  # participants with a known age below the reference's lowest band cannot be
+  # weighted; participants with a missing age are skipped (they keep their
+  # existing weight)
+  if (any(!is.na(participants$part_age) & is.na(participants$age.band))) {
+    cli::cli_abort(
+      "The reference {.arg pop} does not cover all participant ages."
+    )
+  }
+  weighted <- !is.na(participants$age.band)
+  n_weighted <- sum(weighted)
+
+  # sample proportion of (age-known) participants in each band
+  participants[weighted, age.proportion := .N / n_weighted, by = age.band]
+
+  # target proportion from the reference population, matched by band
+  population.proportion <-
+    survey_pop_full$population / sum(survey_pop_full$population)
+  participants[
+    weighted,
+    population.proportion := population.proportion[
+      match(age.band, survey_pop_full$lower.age.limit)
+    ]
   ]
 
-  # merge reference and survey population data
-  participants <- merge(
-    participants,
-    survey_pop_detail,
-    by = "part_age"
-  )
+  participants[
+    weighted,
+    weight := weight * population.proportion / age.proportion
+  ]
 
-  # calculate age-specific weights
-  participants[, weight.age := population.proportion / age.proportion]
-
-  # merge 'weight.age' into 'weight'
-  participants[, weight := weight * weight.age]
-
-  ## Remove the additional columns
-  participants[, age.count := NULL]
-  participants[, age.proportion := NULL]
-  participants[, population.count := NULL]
-  participants[, population.proportion := NULL]
-  participants[, weight.age := NULL]
+  participants[,
+    c("age.band", "age.proportion", "population.proportion") := NULL
+  ]
+  participants
 }
 
 #' @autoglobal
@@ -987,11 +995,38 @@ sample_contacts_participants <- function(
   sampled_contacts_participants
 }
 
+#' Cross-tab contact weights over grouping columns
+#'
+#' @description
+#' Internal helper used by [compute_matrix()] and [contact_matrix()] to
+#' turn a merged contacts table into the rank-`2K`
+#' array of weighted contact counts. Each grouping contributes a
+#' participant-side and a contact-side axis, in that order across the two
+#' halves of the array.
+#'
+#' @param contacts the merged contacts data.table (must have
+#'   `sampled.weight` plus the participant/contact columns referenced by
+#'   `groupings`)
+#' @param groupings a list of grouping triples (see [resolve_groupings()]);
+#'   defaults to single-age, matching pre-existing single-grouping output
+#' @returns a rank-`2K` array with `K = length(groupings)`
+#' @keywords internal
 #' @autoglobal
-weighted_matrix_array <- function(contacts) {
+weighted_matrix_array <- function(
+  contacts,
+  groupings = default_age_groupings()
+) {
+  part_cols <- vapply(groupings, `[[`, character(1), "part")
+  cnt_cols <- vapply(groupings, `[[`, character(1), "cnt")
+
+  xtab_formula <- stats::as.formula(paste(
+    "sampled.weight ~",
+    paste(c(part_cols, cnt_cols), collapse = " + ")
+  ))
+
   weighted_matrix <- xtabs(
     data = contacts,
-    formula = sampled.weight ~ age.group + contact.age.group,
+    formula = xtab_formula,
     addNA = TRUE
   )
 
@@ -1036,18 +1071,59 @@ calculate_weighted_matrix <- function(
   weighted_matrix
 }
 
+#' Normalise a weighted contact array to mean contacts per participant
+#'
+#' @description
+#' Divides the rank-`2K` array of weighted contact counts produced by
+#' [weighted_matrix_array()] by the participant-side weight totals
+#' (cross-tabulated over the same grouping columns), giving the mean
+#' number of contacts per participant. Cells with no participants
+#' become `NA`.
+#'
+#' @param sampled_participants the sampled participants data.table
+#'   (must have `sampled.weight` plus the participant columns referenced
+#'   by `groupings`)
+#' @param weighted_matrix a rank-`2K` array of weighted contact counts
+#' @param groupings a list of grouping triples (see [resolve_groupings()]);
+#'   defaults to single-age, matching pre-existing single-grouping output
+#' @returns the array with the same `dim` and `dimnames` as
+#'   `weighted_matrix`
+#' @keywords internal
 #' @autoglobal
-normalise_weights_to_counts <- function(sampled_participants, weighted_matrix) {
+normalise_weights_to_counts <- function(
+  sampled_participants,
+  weighted_matrix,
+  groupings = default_age_groupings()
+) {
   ## normalise to give mean number of contacts
-  ## calculate normalisation vector
-  norm_vector <- c(xtabs(
-    data = sampled_participants,
-    formula = sampled.weight ~ age.group,
-    addNA = TRUE
+  ## calculate normalisation tensor over the participant axes
+  part_cols <- vapply(groupings, `[[`, character(1), "part")
+  norm_formula <- stats::as.formula(paste(
+    "sampled.weight ~",
+    paste(part_cols, collapse = " + ")
   ))
+  norm_array <- xtabs(
+    data = sampled_participants,
+    formula = norm_formula,
+    addNA = TRUE
+  )
 
-  ## normalise contact matrix
-  weighted_matrix <- weighted_matrix / norm_vector
+  ## flatten weighted_matrix to (T_part x T_cnt) for the division, then
+  ## reshape back to the original rank-2K dims
+  k <- length(groupings)
+  part_dim <- dim(weighted_matrix)[seq_len(k)]
+  cnt_dim <- dim(weighted_matrix)[seq_len(k) + k]
+  flat <- matrix(
+    weighted_matrix,
+    nrow = prod(part_dim),
+    ncol = prod(cnt_dim)
+  )
+  flat <- flat / as.vector(norm_array)
+  weighted_matrix <- array(
+    flat,
+    dim = dim(weighted_matrix),
+    dimnames = dimnames(weighted_matrix)
+  )
 
   ## set non-existent data to NA
   weighted_matrix[is.nan(weighted_matrix)] <- NA_real_
@@ -1197,13 +1273,51 @@ matrix_per_capita <- function(weighted_matrix, survey_pop) {
   weighted_matrix_per_capita
 }
 
+#' Count participants per age group
+#'
+#' @description
+#' Internal helper used by [contact_matrix()] to build its per-age-group
+#' participant counts. A thin wrapper around [n_participants_per_group()]
+#' with the default age-only grouping.
+#'
+#' @param participants the participants data.table
+#' @returns a long data.table with columns `age.group`, `participants`,
+#'   `proportion`
+#' @keywords internal
 #' @autoglobal
 n_participants_per_age_group <- function(participants) {
-  participant_population <- data.table(table(
-    participants[, age.group],
-    useNA = "ifany"
-  ))
-  setnames(participant_population, c("age.group", "participants"))
+  n_participants_per_group(participants, default_age_groupings())
+}
+
+#' Count participants per grouping combination
+#'
+#' @description
+#' Cross-tabulates participants across all participant-side grouping
+#' columns and returns a long data.table with one row per observed
+#' combination, plus the share of participants in each cell. Used by
+#' [compute_matrix()] to populate the `participants` slot of a
+#' `contact_matrix` object.
+#'
+#' @param participants the participants data.table
+#' @param groupings a list of grouping triples (see [resolve_groupings()]);
+#'   defaults to single-age, matching pre-existing single-grouping output
+#' @returns a long data.table with one column per grouping plus
+#'   `participants` and `proportion`
+#' @keywords internal
+#' @autoglobal
+n_participants_per_group <- function(
+  participants,
+  groupings = default_age_groupings()
+) {
+  part_cols <- vapply(groupings, `[[`, character(1), "part")
+  table_args <- lapply(part_cols, function(col) participants[[col]])
+  names(table_args) <- part_cols
+  table_args$useNA <- "ifany"
+  participant_population <- data.table(do.call(table, table_args))
+  setnames(
+    participant_population,
+    c(part_cols, "participants")
+  )
   participant_population[, proportion := participants / sum(participants)]
   participant_population
 }

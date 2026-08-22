@@ -1,16 +1,16 @@
 test_that("age groups can be created and manipulated", {
   ages <- seq_len(50)
   age_limits <- c(0, 5, 10)
-  groups <- reduce_agegroups(ages, age_limits)
+  groups <- reduce_age_groups(ages, age_limits)
   expect_identical(unique(groups), age_limits)
-  expect_warning(limits_to_agegroups(groups), "default")
+  expect_warning(limits_to_age_groups(groups), "default")
   age_groups <-
     expect_identical(
-      as.character(unique(limits_to_agegroups(groups, notation = "brackets"))),
+      as.character(unique(limits_to_age_groups(groups, notation = "brackets"))),
       c("[0,5)", "[5,10)", "[10,Inf)")
     )
   expect_identical(
-    as.character(unique(limits_to_agegroups(groups, notation = "dashes"))),
+    as.character(unique(limits_to_age_groups(groups, notation = "dashes"))),
     c("0-4", "5-9", "10+")
   )
 })
@@ -18,90 +18,91 @@ test_that("age groups can be created and manipulated", {
 test_that("age groups are ordered factors", {
   ages <- seq_len(50)
   age_limits <- c(0, 5, 10)
-  groups <- reduce_agegroups(ages, age_limits)
-  age_groups <- limits_to_agegroups(groups, notation = "dashes")
+  groups <- reduce_age_groups(ages, age_limits)
+  age_groups <- limits_to_age_groups(groups, notation = "dashes")
   expect_s3_class(age_groups, "ordered")
   expect_s3_class(age_groups, "factor")
 })
 
-test_that("pop_age doesn't change total population size", {
-  ages_it_2015 <- wpp_age("Italy", 2015)
-
-  ages_it_2015_10 <- pop_age(ages_it_2015, age_limits = seq(0, 100, by = 10))
-
-  expect_identical(
-    sum(ages_it_2015$population),
-    sum(ages_it_2015_10$population)
+test_that("rebin_ages coarsens without changing total population", {
+  skip_if_not_installed("wpp2017")
+  ages_it_2015 <- suppressWarnings(wpp_age("Italy", 2015))
+  pop <- data.frame(
+    age = limits_to_age_groups(
+      ages_it_2015$lower.age.limit,
+      notation = "brackets"
+    ),
+    population = ages_it_2015$population
   )
 
-  # Even with interpolation
-  # nolint start: implicit_assignment_linter
-  expect_warning(
-    ages_it_2015_cat <- pop_age(ages_it_2015, age_limits = c(0, 18, 40, 65)),
-    "Linearly estimating"
-  )
-  # nolint end
+  coarser <- rebin_ages(pop, age_limits = seq(0, 100, by = 10))
 
-  expect_snapshot_warning(
-    cran = FALSE,
-    pop_age(ages_it_2015, age_limits = c(0, 18, 40, 65))
-  )
+  expect_identical(sum(pop$population), sum(coarser$population))
+  expect_lt(nrow(coarser), nrow(pop))
+})
 
-  expect_identical(
-    sum(ages_it_2015$population),
-    sum(ages_it_2015_cat$population)
+test_that("rebin_ages errors when finer age groups are requested", {
+  pop <- data.frame(
+    age = limits_to_age_groups(seq(0, 20, by = 5), notation = "brackets"),
+    population = rep(1000, 5)
+  )
+  expect_error(
+    rebin_ages(pop, age_limits = c(0, 8, 15)),
+    "finer age groups"
   )
 })
 
-test_that("pop_age returns data unchanged when age_limits is NULL", {
-  ages_it_2015 <- wpp_age("Italy", 2015)
-
-  # Calling without age_limits should return identical data
-  result <- pop_age(ages_it_2015)
-  expect_identical(result, ages_it_2015)
-
-  # Explicitly passing NULL should also work
-  result_null <- pop_age(ages_it_2015, age_limits = NULL)
-  expect_identical(result_null, ages_it_2015)
-
-  # Data.table input should also be returned unchanged
-  ages_dt <- data.table::as.data.table(ages_it_2015)
-  result_dt <- pop_age(ages_dt)
-  expect_identical(result_dt, ages_dt)
+test_that("rebin_ages does not flag limits below the population's range", {
+  ## a limit below the lowest band creates an empty low group, not a split
+  pop <- data.frame(
+    age = limits_to_age_groups(c(20, 30, 40), notation = "brackets"),
+    population = c(1e6, 1e6, 1e6)
+  )
+  out <- rebin_ages(pop, age_limits = c(0, 20, 40))
+  expect_setequal(out$age, c("[20,40)", "[40,Inf)"))
+  expect_identical(out$population[out$age == "[20,40)"], 2e6)
 })
 
-test_that("pop_age works with custom column names and interpolation", {
-  # Create test data with non-standard column names
-  pop_data <- data.frame(
-    age_lower = c(0, 5, 10, 15, 20),
-    pop_count = c(1000, 1200, 1100, 900, 800)
-  )
-
-  # Test with interpolation (age_limits not matching existing groups)
-  # nolint start: implicit_assignment_linter
-  result <- suppressWarnings(
-    pop_age(
-      pop_data,
-      age_limits = c(0, 8, 15),
-      pop_age_column = "age_lower",
-      pop_column = "pop_count"
-    )
-  )
-  # nolint end
-
-  expect_named(result, c("age_lower", "pop_count"))
-  expect_identical(result$age_lower, c(0, 8, 15))
-  # Total population should be preserved
-  expect_identical(sum(result$pop_count), sum(pop_data$pop_count))
-})
-
-test_that("pop_age throws warnings or errors", {
+test_that("rebin_ages errors on bad input", {
   expect_snapshot(
     error = TRUE,
     cran = FALSE,
-    pop_age(3)
+    rebin_ages(3)
   )
-  expect_error(pop_age(3), "to be a data.frame")
+  expect_error(rebin_ages(3), "to be a data.frame")
+  ## age_limits is required
+  pop <- data.frame(age = "[0,5)", population = 1, stringsAsFactors = FALSE)
+  expect_error(rebin_ages(pop), "numeric vector of age limits")
+})
+
+test_that("pop_age() is deprecated in favour of rebin_ages()", {
+  pop_data <- data.frame(
+    lower.age.limit = c(0, 5, 15),
+    population = c(1e6, 5e6, 2e6)
+  )
+  lifecycle::expect_deprecated(pop_age(pop_data))
+  withr::local_options(lifecycle_verbosity = "quiet")
+
+  ## age_limits are forwarded and coarsen the population
+  coarsened <- pop_age(pop_data, age_limits = c(0, 5))
+  expect_identical(coarsened$lower.age.limit, c(0, 5))
+  expect_identical(coarsened$population, c(1e6, 7e6))
+
+  ## custom column names are forwarded too
+  custom <- data.frame(age_lower = c(0, 5, 15), pop = c(1e6, 5e6, 2e6))
+  custom_out <- pop_age(
+    custom,
+    age_limits = c(0, 5),
+    pop_age_column = "age_lower",
+    pop_column = "pop"
+  )
+  expect_identical(custom_out$age_lower, c(0, 5))
+  expect_identical(custom_out$pop, c(1e6, 7e6))
+})
+
+test_that("wpp_age warns when historical year is unavailable", {
+  skip_if_not_installed("wpp2017")
+  withr::local_options(lifecycle_verbosity = "quiet")
   expect_warning(wpp_age("Germany", 2011), "Don't have population data")
   expect_snapshot_warning(
     cran = FALSE,
@@ -109,28 +110,52 @@ test_that("pop_age throws warnings or errors", {
   )
 })
 
-test_that("agegroups_to_limits round-trips (brackets)", {
+test_that("age_groups_to_limits round-trips (brackets)", {
   limits <- c(0, 5, 10)
-  groups <- limits_to_agegroups(limits, notation = "brackets")
-  result <- agegroups_to_limits(groups)
+  groups <- limits_to_age_groups(limits, notation = "brackets")
+  result <- age_groups_to_limits(groups)
   expect_identical(result, limits)
 })
 
-test_that("agegroups_to_limits round-trips with limits_to_agegroups (dashes)", {
+test_that("age_groups_to_limits round-trips (dashes)", {
   limits <- c(0, 5, 10)
-  groups <- limits_to_agegroups(limits, notation = "dashes")
-  result <- agegroups_to_limits(groups)
+  groups <- limits_to_age_groups(limits, notation = "dashes")
+  result <- age_groups_to_limits(groups)
   expect_identical(result, limits)
 })
 
-test_that("agegroups_to_limits works with character input", {
+test_that("age_groups_to_limits works with character input", {
   groups <- c("[0,5)", "[5,10)", "10+")
-  result <- agegroups_to_limits(groups)
+  result <- age_groups_to_limits(groups)
   expect_identical(result, c(0, 5, 10))
 })
 
-test_that("agegroups_to_limits works with single age group", {
+test_that("age_groups_to_limits works with single age group", {
   groups <- factor("0+", levels = "0+", ordered = TRUE)
-  result <- agegroups_to_limits(groups)
+  result <- age_groups_to_limits(groups)
   expect_identical(result, 0)
+})
+
+test_that("agegroups spellings are deprecated in favour of age_groups", {
+  lifecycle::expect_deprecated(reduce_agegroups(seq_len(10), c(0, 5)))
+  lifecycle::expect_deprecated(
+    limits_to_agegroups(c(0, 5, 10), notation = "brackets")
+  )
+  lifecycle::expect_deprecated(agegroups_to_limits(c("[0,5)", "[5,Inf)")))
+
+  ## old names delegate to the new ones
+  withr::local_options(lifecycle_verbosity = "quiet")
+  brackets <- limits_to_age_groups(c(0, 5, 10), notation = "brackets")
+  expect_identical(
+    reduce_agegroups(seq_len(10), c(0, 5)),
+    reduce_age_groups(seq_len(10), c(0, 5))
+  )
+  expect_identical(
+    limits_to_agegroups(c(0, 5, 10), notation = "brackets"),
+    brackets
+  )
+  expect_identical(
+    agegroups_to_limits(brackets),
+    age_groups_to_limits(brackets)
+  )
 })

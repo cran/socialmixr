@@ -3,11 +3,12 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-data.table::setDTthreads(1)
 
 ## -----------------------------------------------------------------------------
+library(data.table)
 library(socialmixr)
 library(ggplot2)
+setDTthreads(1)
 data(polymod)
 
 ## -----------------------------------------------------------------------------
@@ -55,44 +56,53 @@ m <- suppressWarnings(
 mr <- Reduce("+", lapply(m["matrix", ], function(x) x / ncol(m)))
 mr
 
-## ----eval=requireNamespace("wpp2024", quietly = TRUE), message=FALSE, warning=FALSE----
-# data("popAge1dt", package = "wpp2024")
-# uk_pop <- popAge1dt[name == "United Kingdom" & year == 2020,
-#   .(lower.age.limit = age, population = pop * 1000)
-# ]
-# head(uk_pop)
+## -----------------------------------------------------------------------------
+# mock-up of wpp2024's popAge1dt (one-year bands; population in thousands)
+popAge1dt <- data.frame(
+  name = "United Kingdom", year = 2020L,
+  age = 0:90, pop = round(1000 * exp(-(0:90) / 60)),
+  stringsAsFactors = FALSE
+)
+rows <- popAge1dt$name == "United Kingdom" & popAge1dt$year == 2020
+uk_pop <- data.frame(
+  age = limits_to_age_groups(popAge1dt$age[rows], notation = "brackets"),
+  population = popAge1dt$pop[rows] * 1000
+)
+head(uk_pop)
 
 ## -----------------------------------------------------------------------------
 custom_pop <- data.frame(
-  lower.age.limit = c(0, 18, 60),
+  age = limits_to_age_groups(c(0, 18, 60), notation = "brackets"),
   population = c(12000000, 35000000, 20000000)
 )
 
 ## -----------------------------------------------------------------------------
-survey_country_population(polymod, countries = "United Kingdom")
+uk_pop <- data.frame(
+  age = limits_to_age_groups(c(0, 1, 5, 15), notation = "brackets"),
+  population = c(750000, 3200000, 7500000, 56000000)
+)
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
-uk_pop <- survey_country_population(polymod, countries = "United Kingdom")
-
-polymod[country == "United Kingdom"] |>
+uk_matrix <- polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
-  compute_matrix() |>
-  symmetrise(survey_pop = uk_pop)
+  compute_matrix()
+uk_matrix |> symmetrise(survey_pop = align_ages(uk_pop, uk_matrix))
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
-de_pop <- survey_country_population(polymod, countries = "Germany")
+de_pop <- data.frame(
+  age = limits_to_age_groups(c(0, 60), notation = "brackets"),
+  population = c(67000000, 16000000)
+)
 
-polymod[country == "Germany"] |>
+de_matrix <- polymod[country == "Germany"] |>
   assign_age_groups(age_limits = c(0, 60)) |>
-  compute_matrix() |>
-  symmetrise(survey_pop = de_pop) |>
-  per_capita(survey_pop = de_pop)
+  compute_matrix()
+de_matrix |>
+  symmetrise(survey_pop = align_ages(de_pop, de_matrix)) |>
+  per_capita(survey_pop = align_ages(de_pop, de_matrix))
 
 ## -----------------------------------------------------------------------------
-polymod[country == "United Kingdom"] |>
-  assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
-  compute_matrix() |>
-  split_matrix(survey_pop = uk_pop)
+uk_matrix |> split_matrix(survey_pop = align_ages(uk_pop, uk_matrix))
 
 ## ----warning=FALSE, message=FALSE---------------------------------------------
 # contact matrix for school-related contacts
@@ -113,9 +123,20 @@ polymod[cnt_home == 1][cnt_gender == "M"][duration_multi == 5] |>
 ## ----message=FALSE, warning=FALSE---------------------------------------------
 polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 18, 60)) |>
-  weigh("dayofweek", target = c(5, 2), groups = list(1:5, c(0, 6))) |>
-  weigh("part_age", target = uk_pop) |>
+  weigh_by_dayofweek() |>
+  weigh_by_age(uk_pop) |>
   compute_matrix()
+
+## ----eval=FALSE---------------------------------------------------------------
+# country_target <- data.frame(
+#   country = c("United Kingdom", "Germany", "Italy"),
+#   p = c(0.3, 0.4, 0.3),
+#   stringsAsFactors = FALSE
+# )
+# polymod |>
+#   assign_age_groups(age_limits = c(0, 18, 60)) |>
+#   weigh("country", target = country_target) |>
+#   compute_matrix()
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
 polymod |>
@@ -126,8 +147,8 @@ polymod |>
 ## ----message=FALSE, warning=FALSE---------------------------------------------
 polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 18, 60)) |>
-  weigh("dayofweek", target = c(5, 2), groups = list(1:5, c(0, 6))) |>
-  weigh("part_age", target = uk_pop) |>
+  weigh_by_dayofweek() |>
+  weigh_by_age(uk_pop) |>
   compute_matrix(weight_threshold = 3)
 
 ## ----echo=FALSE---------------------------------------------------------------

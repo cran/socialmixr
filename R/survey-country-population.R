@@ -1,8 +1,13 @@
 #' Get survey country population data
 #'
-#' @description Looks up the country and year inside a survey, or a provided
-#' "countries" value, and determines the corresponding demographics in the world
-#' population prospects data using [wpp_age()].
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' This function is deprecated alongside [wpp_age()], which it wraps. The
+#' underlying `wpp2017` data is outdated. Construct a `data.frame` with
+#' columns `lower.age.limit` and `population` from a current source (e.g.
+#' the `wpp2024` package from GitHub) and pass it to [contact_matrix()]
+#' via the `survey_pop` argument instead.
 #'
 #' @param survey A [survey()] object, with column "country" in "participants".
 #' @param countries Optional. A character vector of country names. If specified,
@@ -14,17 +19,30 @@
 #' country information is available from either the survey or countries
 #' argument.
 #'
-#' @importFrom rlang %||%
 #' @autoglobal
 #' @examples
-#' survey_country_population(polymod)
-#' survey_country_population(polymod, countries = "Belgium")
-#' survey_country_population(polymod, countries = c("Belgium", "Italy"))
+#' if (requireNamespace("wpp2017", quietly = TRUE)) {
+#'   survey_country_population(polymod, countries = "Belgium")
+#' }
 #' @export
 survey_country_population <- function(survey, countries = NULL) {
+  lifecycle::deprecate_warn(
+    "0.7.0",
+    "survey_country_population()",
+    details = c(
+      "Pass a data frame with columns {.code lower.age.limit} and \\
+       {.code population} to {.fn contact_matrix} via {.arg survey_pop} \\
+       instead.",
+      i = "The underlying {.pkg wpp2017} data is outdated; consider the \\
+           {.pkg wpp2024} package from GitHub for more recent data."
+    )
+  )
   check_if_contact_survey(survey)
   participants <- survey$participants
-  survey_country_name <- countries %||% unique(participants$country)
+  survey_country_name <- countries
+  if (is.null(countries)) {
+    survey_country_name <- unique(participants$country)
+  }
   survey_country_name <- as.character(stats::na.omit(survey_country_name))
   if (is.null(survey_country_name) || length(survey_country_name) == 0) {
     cli::cli_abort(

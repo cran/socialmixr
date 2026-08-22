@@ -3,6 +3,9 @@ title: "The socialmixr package"
 author: "Sebastian Funk"
 institute: https://epiforecasts.io
 date: "`r Sys.Date()`"
+bibliography: socialmixr.bib
+nocite: '@*'
+link-citations: true
 ---
 
 ```{r setup, include = FALSE}
@@ -14,7 +17,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-data.table::setDTthreads(1)
+setDTthreads(1)
 ```
 
 [socialmixr](https://github.com/epiforecasts/socialmixr) is an `R` package to derive social mixing matrices from survey data. These are particularly useful for age-structured [infectious disease models](https://en.wikipedia.org/wiki/Mathematical_modelling_of_infectious_disease). For background on age-specific mixing matrices and what data inform them, see, for example, the paper on POLYMOD by [@mossong_social_2008].
@@ -82,10 +85,10 @@ This way, the `peru` data set can be loaded in the future without the need for a
 peru_survey <- readRDS("peru.rds")
 ```
 
-Some surveys may contain data from multiple countries. To check this, use the `survey_countries` function
+Some surveys may contain data from multiple countries. To check this, look at the `country` column of the participant data:
 
 ```{r}
-survey_countries(polymod)
+unique(polymod$participants$country)
 ```
 
 Use the subset method `[` to restrict to one or more countries:
@@ -97,10 +100,10 @@ polymod[country %in% c("United Kingdom", "Germany")]
 If this is not done, the different sub-surveys contained in a dataset are combined as a single sample (without country-specific weighting).
 
 
-A reference for any given survey can be obtained using `get_citation()`, e.g.
+A reference for any given survey is in its `reference` field, e.g.
 
 ```{r}
-get_citation(polymod)
+polymod$reference
 ```
 
 # Bootstrapping
@@ -137,43 +140,49 @@ mr
 
 # Demography
 
-Obtaining symmetric contact matrices, splitting out their components (see below) and population-based participant weights require information about the underlying demographic composition of the survey population. This is represented as a `data.frame` with columns `lower.age.limit` (the lower end of each age group) and `population` (the number of people in that age group).
+Obtaining symmetric contact matrices, splitting out their components (see below) and population-based participant weights require information about the underlying demographic composition of the survey population.
+
+The post-processing functions (`symmetrise()`, `split_matrix()`, `per_capita()`) need population data. In practice you supply a population table with an `age` column of age-group labels, a `population` column, and a column per other grouping, then align it to a computed matrix with `align_ages()`. `align_ages()` aggregates each grouping to the matrix's levels (coarsening the age grouping where needed) and returns the `data.frame` the post-processing functions expect.
 
 ## Using custom population data
 
-You can construct any comparable data frame and pass it to the relevant post-processing step:
+You can construct any comparable data frame and pass it through `align_ages()` to the relevant post-processing step:
 
 ```{r message=FALSE, warning=FALSE}
 custom_pop <- data.frame(
-  lower.age.limit = c(0, 18, 60),
+  age = limits_to_age_groups(c(0, 18, 60), notation = "brackets"),
   population = c(12000000, 35000000, 20000000)
 )
-polymod[country == "United Kingdom"] |>
+demo_matrix <- polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 18, 60)) |>
-  compute_matrix() |>
-  symmetrise(survey_pop = custom_pop)
+  compute_matrix()
+demo_matrix |> symmetrise(survey_pop = align_ages(custom_pop, demo_matrix))
 ```
 
-For recent UN World Population Prospects data, the `wpp2024` package is available from GitHub (`remotes::install_github("PPgp/wpp2024")`):
-
-```{r eval=requireNamespace("wpp2024", quietly = TRUE), message=FALSE, warning=FALSE}
-data("popAge1dt", package = "wpp2024")
-uk_pop <- popAge1dt[name == "United Kingdom" & year == 2020,
-  .(lower.age.limit = age, population = pop * 1000)
-]
-polymod[country == "United Kingdom"] |>
-  assign_age_groups(age_limits = c(0, 18, 60)) |>
-  compute_matrix() |>
-  symmetrise(survey_pop = uk_pop)
-```
-
-`survey_country_population()` looks up country-specific population data from the [`wpp2017`](https://cran.r-project.org/package=wpp2017) package, which is an optional (Suggests) dependency of socialmixr; install it separately to use this function. Passing population data directly (as above) is preferred where possible:
+For recent UN World Population Prospects data, the [`wpp2024`](https://github.com/PPgp/wpp2024) package (`remotes::install_github("PPgp/wpp2024")`) provides `popAge1dt`, a table of one-year population bands. Load it from that package, relabel the ages with `limits_to_age_groups()`, and coarsen to the matrix's age groups with `align_ages()`. Here we use a small mock-up with the same columns:
 
 ```{r}
-uk_pop_default <- survey_country_population(
-  polymod, countries = "United Kingdom"
+# mock-up of wpp2024's popAge1dt (one-year bands; population in thousands)
+popAge1dt <- data.frame(
+  name = "United Kingdom", year = 2020L,
+  age = 0:90, pop = round(1000 * exp(-(0:90) / 60)),
+  stringsAsFactors = FALSE
 )
-head(uk_pop_default)
+rows <- popAge1dt$name == "United Kingdom" & popAge1dt$year == 2020
+uk_pop_raw <- data.frame(
+  age = limits_to_age_groups(popAge1dt$age[rows], notation = "brackets"),
+  population = popAge1dt$pop[rows] * 1000
+)
+demo_matrix |> symmetrise(survey_pop = align_ages(uk_pop_raw, demo_matrix))
+```
+
+For the rest of this section we use a small constructed `uk_pop` for the United Kingdom, sufficient to illustrate the post-processing functions:
+
+```{r}
+uk_pop <- data.frame(
+  age = limits_to_age_groups(c(0, 1, 5, 15), notation = "brackets"),
+  population = c(750000, 3200000, 7500000, 56000000)
+)
 ```
 
 
@@ -190,12 +199,10 @@ $$m'_{ij} = \frac{1}{2N_i} (m_{ij} N_i + m_{ji} N_j)$$
 To get this version of the contact matrix, pipe the matrix through `symmetrise()`, passing the population data:
 
 ```{r}
-uk_pop <- survey_country_population(polymod, countries = "United Kingdom")
-
-polymod[country == "United Kingdom"] |>
+uk_matrix <- polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
-  compute_matrix() |>
-  symmetrise(survey_pop = uk_pop)
+  compute_matrix()
+uk_matrix |> symmetrise(survey_pop = align_ages(uk_pop, uk_matrix))
 ```
 
 # Contact rates per capita
@@ -210,13 +217,17 @@ $$c'_{ij} = \frac{m_{ij} N_i + m_{ji} N_j}{2N_iN_j} = c'_{ji}$$
 
 
 ```{r message=FALSE, warning=FALSE}
-de_pop <- survey_country_population(polymod, countries = "Germany")
+de_pop <- data.frame(
+  age = limits_to_age_groups(c(0, 60), notation = "brackets"),
+  population = c(67000000, 16000000)
+)
 
-polymod[country == "Germany"] |>
+de_matrix <- polymod[country == "Germany"] |>
   assign_age_groups(age_limits = c(0, 60)) |>
-  compute_matrix() |>
-  symmetrise(survey_pop = de_pop) |>
-  per_capita(survey_pop = de_pop)
+  compute_matrix()
+de_matrix |>
+  symmetrise(survey_pop = align_ages(de_pop, de_matrix)) |>
+  per_capita(survey_pop = align_ages(de_pop, de_matrix))
 ```
 
 # Splitting contact matrices
@@ -230,10 +241,7 @@ where $c$ is the mean number of contacts across the whole population, $c q d_i$ 
 `split_matrix()` returns the assortativity matrix $a_{ij}$ in `$matrix`, with additional components `$mean.contacts` ($c$), `$normalisation` ($q$) and `$contacts` ($d_i$).
 
 ```{r}
-polymod[country == "United Kingdom"] |>
-  assign_age_groups(age_limits = c(0, 1, 5, 15)) |>
-  compute_matrix() |>
-  split_matrix(survey_pop = uk_pop)
+uk_matrix |> split_matrix(survey_pop = align_ages(uk_pop, uk_matrix))
 ```
 
 # Filtering
@@ -272,17 +280,31 @@ $$w_{i} = w_{\textrm{age}} * w_{\textrm{day.of.week}} $$
 
 If the social contact analysis is based on stratification by splitting the population into non-overlapping groups, it requires the weights to be standardised so that the weighted totals within mutually exclusive cells equal the known population totals [@kolenikov_post-stratification_2016]. `compute_matrix()` applies this post-stratification normalisation within age groups.
 
-`weigh()` is composable: each call multiplies new weights into the participants' `weight` column. In POLYMOD, the `dayofweek` column uses 0 for Sunday and 6 for Saturday, so weekdays are 1-5 and weekend days are 0 and 6:
+`weigh()` is composable: each call multiplies new weights into the participants' `weight` column. Common recipes are wrapped as `weigh_by_*()` convenience functions:
 
 ```{r message=FALSE, warning=FALSE}
 polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 18, 60)) |>
-  weigh("dayofweek", target = c(5, 2), groups = list(1:5, c(0, 6))) |>
-  weigh("part_age", target = uk_pop) |>
+  weigh_by_dayofweek() |>
+  weigh_by_age(uk_pop) |>
   compute_matrix()
 ```
 
-The first `weigh()` call assigns weekday participants a total weight of 5 and weekend participants a total weight of 2 (the weekly 5/2 split). The second call post-stratifies against the population structure in `uk_pop`.
+`weigh_by_dayofweek()` assigns weekday participants a total weight of 5 and weekend participants a total weight of 2 (the weekly 5/2 split). `weigh_by_age()` post-stratifies against a target population: it bins participants into `uk_pop`'s age bands and multiplies in the ratio of target to observed age share within each band.
+
+For arbitrary discrete joins, `weigh()` itself takes a two-column data frame whose key column matches `by` — e.g. pooling participants across countries by a target share:
+
+```{r eval=FALSE}
+country_target <- data.frame(
+  country = c("United Kingdom", "Germany", "Italy"),
+  p = c(0.3, 0.4, 0.3),
+  stringsAsFactors = FALSE
+)
+polymod |>
+  assign_age_groups(age_limits = c(0, 18, 60)) |>
+  weigh("country", target = country_target) |>
+  compute_matrix()
+```
 
 ## User-defined participant weights
 
@@ -303,8 +325,8 @@ If the survey population differs extensively from the demography, some participa
 ```{r message=FALSE, warning=FALSE}
 polymod[country == "United Kingdom"] |>
   assign_age_groups(age_limits = c(0, 18, 60)) |>
-  weigh("dayofweek", target = c(5, 2), groups = list(1:5, c(0, 6))) |>
-  weigh("part_age", target = uk_pop) |>
+  weigh_by_dayofweek() |>
+  weigh_by_age(uk_pop) |>
   compute_matrix(weight_threshold = 3)
 ```
 

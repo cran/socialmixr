@@ -1,19 +1,19 @@
 set.seed(123)
 
 withr::local_options(
-  lifecycle_verbosity = "quiet",
+  lifecycle_verbosity = "warning",
   .local_envir = teardown_env()
 )
-polymod2 <- get_survey(polymod)
-polymod3 <- get_survey(polymod)
-polymod4 <- get_survey(polymod)
-polymod5 <- get_survey(polymod)
-polymod6 <- get_survey(polymod)
-polymod7 <- get_survey(polymod)
-polymod8 <- get_survey(polymod)
-polymod9 <- get_survey(polymod)
-polymod10 <- get_survey(polymod)
-polymod11 <- get_survey(polymod)
+polymod2 <- copy_survey(polymod)
+polymod3 <- copy_survey(polymod)
+polymod4 <- copy_survey(polymod)
+polymod5 <- copy_survey(polymod)
+polymod6 <- copy_survey(polymod)
+polymod7 <- copy_survey(polymod)
+polymod8 <- copy_survey(polymod)
+polymod9 <- copy_survey(polymod)
+polymod10 <- copy_survey(polymod)
+polymod11 <- copy_survey(polymod)
 
 polymod2$participants$added_weight <- 0.5
 polymod2$contacts$cnt_age_exact <- factor(polymod2$contacts$cnt_age_exact)
@@ -44,11 +44,11 @@ polymod10$participants$added_weight2 <- 0.3
 
 # to test weights (age and day.of.week)
 part_selection <- (polymod11$participants$part_age %in%
-  (1:2) &
-  polymod11$participants$dayofweek %in% 1:6) |
+    (1:2) &
+    polymod11$participants$dayofweek %in% 1:6) |
   (polymod11$participants$part_age %in%
-    (3) &
-    polymod11$participants$dayofweek %in% 2:3)
+      (3) &
+      polymod11$participants$dayofweek %in% 2:3)
 polymod11$participants <- polymod11$participants[part_selection, ]
 
 empty_pop <- data.frame(lower.age.limit = c(0, 5), population = NA_real_)
@@ -80,13 +80,6 @@ options <-
       estimated_contact_age = "sample",
       symmetric = TRUE,
       missing_contact_age = "remove"
-    ),
-    test4 = list(
-      survey = polymod8,
-      missing_contact_age = "sample",
-      symmetric = TRUE,
-      age_limits = c(0, 5, 15),
-      symmetric_norm_threshold = 4
     )
   )
 
@@ -274,28 +267,12 @@ test_that("warning is thrown if country has no survey population", {
   )
 })
 
-test_that("warning is thrown if contact survey has no age information", {
-  withr::local_options(lifecycle_verbosity = "quiet")
-  expect_snapshot_warning(
-    cran = FALSE,
-    check(x = polymod6)
+test_that("check() is defunct", {
+  expect_error(
+    check(x = polymod2),
+    regexp = "0[.]5[.]0",
+    class = "lifecycle_error_deprecated"
   )
-  expect_warning(check(x = polymod6), "do not exist")
-})
-
-test_that("warning is thrown if participant data has no country", {
-  withr::local_options(lifecycle_verbosity = "quiet")
-  expect_snapshot_warning(
-    cran = FALSE,
-    check(x = polymod4)
-  )
-  expect_warning(check(x = polymod4), "does not exist")
-})
-
-test_that("check result is reported back", {
-  withr::local_options(lifecycle_verbosity = "quiet")
-  expect_snapshot(check(x = polymod2))
-  expect_message(check(x = polymod2), "Check")
 })
 
 test_that("good suggestions are made", {
@@ -571,7 +548,10 @@ test_that("age-specific weight changes multi-year age groups", {
     sum(matrix_unweighted$matrix[1, ]),
     sum(matrix_weighted$matrix[1, ])
   ) # manual calculation
-  expect_identical(matrix_unweighted$matrix[2, ], matrix_weighted$matrix[2, ])
+  ## age-weighting leaves group 2 unchanged up to floating-point rounding
+  # nolint start: expect_identical_linter
+  expect_equal(matrix_unweighted$matrix[2, ], matrix_weighted$matrix[2, ])
+  # nolint end
 })
 
 test_that("age-specific weight unchanged for single year groups", {
@@ -972,15 +952,14 @@ test_that("participants with missing contact age are handled", {
     1L
   )
 
-  expect_identical(
-    ncol(
-      contact_matrix(
-        survey = polymod,
-        age_limits = 0,
-        missing_contact_age = "sample"
-      )$matrix
+  expect_error(
+    contact_matrix(
+      survey = polymod,
+      age_limits = 0,
+      missing_contact_age = "sample"
     ),
-    1L
+    regexp = "0[.]5[.]0",
+    class = "lifecycle_error_deprecated"
   )
 })
 
@@ -1168,15 +1147,14 @@ test_that("contacts below age limits excluded regardless of setting", {
     ),
     2L
   )
-  expect_identical(
-    ncol(
-      contact_matrix(
-        polymod,
-        age_limits = c(10, 50),
-        missing_contact_age = "sample"
-      )$matrix
+  expect_error(
+    contact_matrix(
+      polymod,
+      age_limits = c(10, 50),
+      missing_contact_age = "sample"
     ),
-    2L
+    regexp = "0[.]5[.]0",
+    class = "lifecycle_error_deprecated"
   )
   expect_identical(
     ncol(
@@ -1201,9 +1179,9 @@ test_that("contacts below age limits excluded regardless of setting", {
 })
 
 test_that("sample.all.age.groups errors when age group has no participants", {
-  withr::local_options(lifecycle_verbosity = "quiet")
+  withr::local_options(lifecycle_verbosity = "warning")
   # Create a survey with no participants in a specific age range
-  polymod_limited <- get_survey(polymod)
+  polymod_limited <- copy_survey(polymod)
   # Keep only participants aged 20+
   polymod_limited$participants <-
     polymod_limited$participants[part_age_exact >= 20]
@@ -1252,22 +1230,24 @@ test_that("contact_matrix warns for multiple observations per participant", {
   )
 })
 
-test_that("deprecated argument names produce warnings", {
-  # Test contact_matrix() deprecated arguments
+test_that("deprecated dotted argument names warn but still work", {
+  withr::local_options(lifecycle_verbosity = "warning")
+
+  # contact_matrix() dotted args warn and are honoured
   lifecycle::expect_deprecated(
-    contact_matrix(polymod, age.limits = c(0, 18))
+    contact_matrix(polymod, age.limits = c(0, 18)),
+    regexp = "0[.]5[.]0"
   )
   lifecycle::expect_deprecated(
     contact_matrix(polymod, age_limits = c(0, 18), weigh.dayofweek = TRUE)
   )
 
-  # Test pop_age() deprecated arguments
-  ages_it <- wpp_age("Italy", 2015)
+  fake_pop <- data.frame(lower.age.limit = c(0, 5), population = c(1e6, 5e6))
   lifecycle::expect_deprecated(
-    pop_age(ages_it, age.limits = c(0, 18, 65))
+    pop_age(fake_pop, age.limits = c(0, 18, 65))
   )
 
-  # Test as_contact_survey() deprecated arguments
+  # as_contact_survey() dotted args
   survey_list <- list(
     participants = polymod$participants,
     contacts = polymod$contacts,

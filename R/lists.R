@@ -23,7 +23,7 @@
 #' }
 #' @export
 wpp_countries <- function() {
-  lifecycle::deprecate_soft(
+  lifecycle::deprecate_warn(
     "0.6.0",
     "wpp_countries()",
     details = c(
@@ -50,7 +50,7 @@ wpp_countries <- function() {
 
   countries <- unique(c(popF$country_code, popM$country_code))
   found_countries <-
-    suppressWarnings(countrycode::countrycode(
+    suppressWarnings(countrycode(
       countries,
       "un",
       "country.name"

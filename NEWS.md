@@ -1,3 +1,128 @@
+# socialmixr 0.7.0
+
+## New features
+
+* `compute_matrix()` gains a `by` argument that accepts any combination of
+  participant/contact groupings, not just age. Each entry is either the
+  string `"age"` (matching the columns produced by `assign_age_groups()`),
+  a stem `"<name>"` (resolving to `part_<name>` and `cnt_<name>`), or an
+  explicit `c(part = "X", cnt = "Y")` override. The result is a rank-`2K`
+  array where the first `K` axes index participants and the last `K`
+  index contacts. The default `by = "age"` reproduces the single-grouping
+  behaviour of previous releases. `split_matrix()` currently still
+  requires a single-grouping matrix (#143).
+
+* `symmetrise()` and `per_capita()` now accept multi-grouping matrices,
+  with a single `survey_pop` format across all groupings. `survey_pop` is
+  a data frame with one column per grouping, named after the grouping
+  (e.g. `age`, `gender`) and holding that grouping's levels as they appear
+  in the matrix, plus a `population` column, with one row per combination.
+  Levels are matched exactly: there is no interpolation. `symmetrise()`
+  additionally requires the participant- and contact-side dims to share the
+  same levels, otherwise reciprocity is undefined and it aborts (#319).
+
+* New `rebin_ages()` rebins a population table to a coarser set of age groups
+  by summing. It operates on an `age` column of age-group labels (as produced
+  by `limits_to_age_groups()` or `assign_age_groups()`) and returns the same
+  form, so it composes directly with the post-processing functions. It only
+  coarsens: requesting age groups finer than the population data is an error,
+  since splitting a band would require assuming a within-band age distribution.
+
+* New `align_ages()` aligns a population table to a contact matrix's
+  groupings, returning the `survey_pop` data frame that `symmetrise()`,
+  `split_matrix()` and `per_capita()` expect. Supply population with an `age`
+  column of age-group label, plus a column per other grouping; `align_ages()`
+  coarsens age to the matrix's age groups within each combination of the other
+  groupings (via `rebin_ages()`) and aggregates categorical groupings by exact
+  name. The population must be at least as fine as the matrix's age groups. A
+  typical workflow is
+  `result |> symmetrise(survey_pop = align_ages(population, result))` (#319).
+
+* The `contact_matrix` S3 object now carries a `groupings` field — the
+  list of grouping triples that produced its `matrix`. Used internally
+  by the multi-grouping post-processing functions; users can read it to
+  introspect the matrix's structure (#319).
+
+* New `flatten()` returns a `T x T` matrix view of a multi-grouping
+  contact matrix — Manna et al.'s generalised representation, with
+  colon-joined dim labels (e.g. `"[0,5):F"`). For single-grouping
+  matrices it returns the matrix unchanged (#319).
+
+* `plot()` and `as.matrix()` now work on multi-grouping contact matrices,
+  operating on the flattened `T x T` view. `matrix_plot()` no longer
+  assumes a square matrix, so non-square flattened matrices plot correctly
+  (#321).
+
+* New vignette, *Contact matrices across more than one grouping*, with
+  recipes for building, flattening, plotting and post-processing matrices
+  over several groupings (#322).
+
+* `weigh()` gains a new canonical target shape: a two-column data frame
+  whose key column matches `by` is joined and multiplied into `weight`.
+  This makes recipes like `weigh(survey, "country", target = ...)`
+  natural. The previous silent dispatch on a population data frame
+  (a `target` data frame with `lower.age.limit`/`population` and no
+  column matching `by`) is soft-deprecated; use the new `weigh_by_age()`
+  for the same effect with an explicit name. `weigh_by_age()` takes a
+  reference population with an `age` column of age-group labels and a
+  `population` column. New `weigh_by_dayofweek()` is a thin wrapper around
+  the existing 5/2 split. `weigh()`'s named vector and `groups` paths are
+  unchanged (#314).
+
+## Deprecations
+
+* Exported function names now spell "age groups" consistently as `age_groups`
+  (snake_case), matching `assign_age_groups()`. `reduce_agegroups()`,
+  `limits_to_agegroups()` and `agegroups_to_limits()` are renamed to
+  `reduce_age_groups()`, `limits_to_age_groups()` and `age_groups_to_limits()`;
+  the old names remain as deprecated aliases that warn (#331).
+
+* Interpolating population data to age groups finer than the data itself is
+  deprecated. `contact_matrix()` (when it adjusts demographic data to the
+  requested age groups) and `pop_age()` still do it but now warn, and it will
+  error in a future release. Supply population data at least as fine as the
+  requested age groups. The new `rebin_ages()` and `align_ages()` never
+  interpolate: they error on finer requests.
+
+* `pop_age()` is deprecated in favour of `rebin_ages()` and warns; it will
+  be removed in a future release (#328).
+
+* Advance deprecation cycle (#312). `wpp_age()`, `wpp_countries()`, and
+  `survey_country_population()` are deprecated (warn) — all three are
+  thin layers over `wpp2017`, which is on its way out. Construct a
+  `data.frame` with columns `lower.age.limit` and `population` from a
+  current source (e.g. the `wpp2024` package from GitHub) and pass it to
+  `contact_matrix()` via `survey_pop` instead. The implicit population
+  lookup in `contact_matrix()` (when `survey_pop` is not given but
+  `symmetric`, `split`, `per_capita`, `weigh_age`, or `return_demography`
+  is set) keeps the warning introduced in 0.6.0 with a sharper "will
+  error in a future release" message. `wpp2017` remains in `Imports` for
+  now, so this lookup keeps working; it will move to `Suggests` in a later
+  release once reverse dependencies have migrated. The following are now
+  defunct (`deprecate_stop`): `survey()`, `check()`, `get_survey()`,
+  `download_survey()`, `list_surveys()`, `survey_countries()`,
+  `get_citation()`, and the `missing_contact_age = "sample"` option on
+  `assign_age_groups()` and `contact_matrix()`. The dotted argument names
+  (`age.limits`, `survey.pop`, `country.column`, etc.) on
+  `contact_matrix()`, `pop_age()`, `clean()`, and `as_contact_survey()`
+  remain deprecated and warn, rather than becoming defunct, so downstream
+  packages still using them keep working while they migrate. Bogus
+  `"1.0.0"` versions on the `survey()` and `check()` deprecation messages
+  have been corrected.
+
+## Bug fixes
+
+* `load_survey()` now errors clearly when given no files (e.g. an empty vector
+  or `NULL` from a failed download) instead of raising an opaque
+  `invalid 'file' argument`.
+
+## Internal
+
+* Removed the air formatter: `air.toml`, the `style.yaml` format-suggestion
+  workflow, and the VS Code formatter settings. lintr continues to run on
+  changed files, and `indentation_linter` is re-enabled (with a hanging-indent
+  style) to keep linting indentation now that air no longer handles it.
+
 # socialmixr 0.6.0
 
 This release adds a pipeline of composable functions for building contact
@@ -78,6 +203,12 @@ class. The vignette and README are rewritten around the pipeline (#288).
   including when the function errors mid-plot. Previously the legend
   parameters (`new`, `pty`) and the error handler (`err`) were left
   modified in the user's session (#307).
+
+* `load_survey()` now attaches contact-level files (those keyed at the contact
+  level, e.g. a contact-attributes file sharing only `part_id` with
+  participants) to the contact table instead of inflating the participant
+  table to one row per contact. Previously such files were merged into
+  participants, squaring contact counts in the resulting matrix (#326).
 
 ## Deprecations
 

@@ -5,16 +5,13 @@
 \title{Decompose a contact matrix into mean contacts, normalisation and
 assortativity}
 \usage{
-split_matrix(x, survey_pop, ...)
+split_matrix(x, survey_pop)
 }
 \arguments{
 \item{x}{a list as returned by \code{\link[=compute_matrix]{compute_matrix()}}, with elements \code{matrix}
 and \code{participants}}
 
-\item{survey_pop}{a data frame with columns \code{lower.age.limit} and
-\code{population} (e.g. from \code{\link[=wpp_age]{wpp_age()}})}
-
-\item{...}{passed to \code{\link[=pop_age]{pop_age()}} for interpolation}
+\item{survey_pop}{a data frame; see \emph{Population data} below}
 }
 \value{
 \code{x} with \verb{$matrix} replaced by the assortativity matrix, plus
@@ -26,13 +23,33 @@ population (\code{mean.contacts}), a normalisation constant (\code{normalisation
 age-specific contact rates (\code{contacts}), and an assortativity matrix
 (replacing \verb{$matrix}). For details, see the "Getting Started" vignette.
 }
+\details{
+\code{split_matrix()} supports single-grouping (rank-2) matrices only.
+}
+\section{Population data}{
+
+
+\code{survey_pop} is a data frame with one column per grouping, named after the
+grouping (e.g. \code{age}, \code{gender}) and holding that grouping's levels as they
+appear in the matrix, plus a \code{population} column with the size of each
+combination. One row per combination of levels is required, and levels are
+matched to the matrix exactly, without interpolation.
+
+Use \code{\link[=align_ages]{align_ages()}} to build this from a raw population table: it aggregates
+each grouping to the matrix's levels (interpolating the age grouping where
+needed) and labels the columns to match.
+}
+
 \examples{
 data(polymod)
-pop <- wpp_age("United Kingdom", 2005)
-polymod |>
+result <- polymod |>
   (\(s) s[country == "United Kingdom"])() |>
   assign_age_groups(age_limits = c(0, 5, 15)) |>
-  compute_matrix() |>
-  split_matrix(survey_pop = pop)
+  compute_matrix()
+uk_pop <- data.frame(
+  age = limits_to_age_groups(0:80, notation = "brackets"),
+  population = rep(1e5, 81)
+)
+result |> split_matrix(survey_pop = align_ages(uk_pop, result))
 
 }
